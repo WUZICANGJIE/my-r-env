@@ -64,6 +64,12 @@ y | Y)
     echo ">>> Pushing image to ${ARCH_SPECIFIC_IMAGE_NAME}..."
     if docker push "${ARCH_SPECIFIC_IMAGE_NAME}"; then
       echo ">>> Image push complete: ${ARCH_SPECIFIC_IMAGE_NAME}"
+      echo ">>> Creating multi-architecture manifest for ${FULL_IMAGE_NAME}..."
+      if docker buildx imagetools create -t "${FULL_IMAGE_NAME}" "${IMAGE_NAME}:${IMAGE_TAG}-amd64" "${IMAGE_NAME}:${IMAGE_TAG}-arm64"; then
+        echo ">>> Multi-architecture manifest created successfully: ${FULL_IMAGE_NAME}"
+      else
+        echo ">>> Warning: Failed to create multi-architecture manifest. Ensure both amd64 and arm64 images are pushed."
+      fi
     else
       echo ">>> Failed to push image ${ARCH_SPECIFIC_IMAGE_NAME}. Please check Docker Hub credentials and image name/tag."
       exit 1
