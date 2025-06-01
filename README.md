@@ -1,85 +1,95 @@
 # My Portable R Development Environment
 
-This repository contains the configuration files to build a consistent, portable, and cross-platform R development environment using Podman and Distrobox. It is designed to be managed with Git and synchronized across multiple machines, including x86_64 Linux desktops and ARM64 devices running WSL.
+This repository provides configuration files for a consistent, portable, and cross-platform R development environment using Podman and Distrobox. It's designed for Git-based management and synchronization across multiple machines (x86_64 Linux, ARM64 WSL).
 
-Identical **local** environment everywhere.
+The goal is an identical **local** R environment everywhere.
 
-**Disclaimer:** This project is primarily for my personal use. While it is designed to work across different environments, I cannot guarantee its functionality or provide support for all possible setups.
+**Disclaimer:** This is a personal project. Functionality across all setups is not guaranteed.
 
 ## Features
 
 - **R**: Latest version from CRAN.
-- **Core R Packages**: Essential packages are pre-installed (via `install_essentials.R`).
-- **Additional R Packages**: A curated list of addon packages from CRAN and GitHub are also included (via `install_addons.R` and `install_github.R`).
-- **Python & Radian**: Includes Python and the `radian` R console for an enhanced command-line experience.
-- **PDF Generation**: Comes with a LaTeX distribution for rendering RMarkdown to PDF.
-- **Cross-Platform**: Works on both `x86_64` and `arm64` (aarch64) architectures.
-- **Automated**: Uses a setup script (`setup.sh`) for one-command deployment.
+- **Core R Packages**: Pre-installed via `install_essentials.R`.
+- **Additional R Packages**: Curated addons from CRAN (`install_addons.R`) and GitHub (`install_github.R`).
+- **Python & Radian**: Includes Python and the `radian` R console.
+- **PDF Generation**: LaTeX for RMarkdown to PDF.
+- **Cross-Platform**: Works on `x86_64` and `arm64` (aarch64).
+- **Automated Setup & Deployment**:
+    - `setup.sh`: For initial environment setup, building the image, and updating it.
+    - `deploy.sh`: For quickly deploying the existing image from Docker Hub to a new machine.
 
 ## Prerequisites
 
-On each machine, you need to install:
-1.  **Git**: To clone this repository.
-2.  **Podman**: The container engine.
-3.  **Distrobox**: The container manager.
+On each machine:
+1.  **Git**
+2.  **Podman**
+3.  **Distrobox**
 
 ## The Workflow
 
-The core idea is to build an architecture-specific image on each machine (`x86_64`, `arm64`) and push them to the **same tag** in a container registry (like Docker Hub). The registry will combine them into a single multi-arch manifest.
+The core idea is to build architecture-specific images (`x86_64`, `arm64`) on each machine and push them to the **same tag** on Docker Hub. Docker Hub creates a multi-arch manifest.
 
 ### A. Initial Setup (First Time on Each Architecture)
 
 1.  **Clone this repository:**
     ```bash
-    git clone [https://github.com/wuzicangjie/my-r-environment.git](https://github.com/wuzicangjie/my-r-environment.git)
+    git clone https://github.com/wuzicangjie/my-r-environment.git # Replace with your repo URL if forked
     cd my-r-environment
     ```
 
-2.  **Edit `setup.sh`:**
-    Open `setup.sh` and change the `DOCKERHUB_USERNAME` variable to your actual Docker Hub username.
+2.  **Configure Docker Hub Username:**
+    Open `setup.sh` and set the `DOCKERHUB_USERNAME` variable to your Docker Hub username.
 
 3.  **Run the setup script:**
     ```bash
     chmod +x setup.sh
     ./setup.sh
     ```
-    - The script will first build the image locally.
-    - It will then ask you if you want to push the image. **For the initial setup on each architecture, you must answer `y` (yes)**. This will upload the architecture-specific version to your Docker Hub repository.
+    - The script builds the image locally.
+    - When prompted to push, answer `y` (yes) for the initial setup on *each different architecture* to upload the specific version to Docker Hub.
 
 4.  **Repeat on other architectures:**
-    Go to your other machine (e.g., the ARM device), clone the repo, and run the same `./setup.sh` script. When you push, Docker Hub will automatically add the ARM version to your existing image tag.
+    On your other machines (e.g., an ARM device), clone the repo, configure `DOCKERHUB_USERNAME` in `setup.sh`, and run `./setup.sh`, pushing the image.
 
-### B. Deploying on a New Machine
+### B. Deploying on a New Machine (Using an Existing Image)
 
-Once your multi-arch image exists on Docker Hub, setting up a new machine is incredibly simple:
+Once your multi-arch image is on Docker Hub:
 
-1.  Clone the repository.
-2.  Run `./setup.sh`.
-3.  When asked to push, you can answer `n` (no), as the script will use the image already available on Docker Hub to create your local container.
+1.  **Clone the repository.**
+2.  **Configure Docker Hub Username:**
+    Open `deploy.sh` and set the `DOCKERHUB_USERNAME` variable to your Docker Hub username.
+3.  **Run the deployment script:**
+    ```bash
+    chmod +x deploy.sh
+    ./deploy.sh
+    ```
+    This script pulls the appropriate image from Docker Hub and sets up the Distrobox container.
 
 ### C. Updating the Environment
 
 1.  **Modify Configuration Files**:
-    *   For **system packages** (e.g., `apt` packages, Python, LaTeX), edit the `Containerfile`.
-    *   For **core R packages**, modify `install_essentials.R`.
-    *   For **additional CRAN R packages**, modify `install_addons.R`.
-    *   For **R packages from GitHub**, modify `install_github.R`.
+    *   System packages (e.g., `apt`, Python, LaTeX): `Containerfile`.
+    *   Core R packages: `install_essentials.R`.
+    *   Additional CRAN R packages: `install_addons.R`.
+    *   R packages from GitHub: `install_github.R`.
 
 2.  **Test Locally**:
-    Run `./setup.sh` on your current machine. This will rebuild the image with your changes and create a new local container for testing. Answer `n` (no) when asked if you want to push the image, unless you are ready to update the image on Docker Hub.
+    Run `./setup.sh` on your current machine. Answer `n` (no) when asked to push, unless you're ready to update the Docker Hub image. This rebuilds and tests the image locally.
 
 3.  **Commit and Push Changes to Git**:
-    Once you are satisfied with the changes:
     ```bash
-    git add . # Add all changes
-    git commit -m "Update environment" # Or a more descriptive message
+    git add .
+    git commit -m "Update environment: [your changes]"
     git push
     ```
 
-4.  **Update All Machines & Docker Hub Image**:
-    *   On your **current machine**, re-run `./setup.sh`. This time, when asked if you want to push the image, answer `y` (yes) to update the Docker Hub image for the current architecture.
-    *   On your **other machines (different architectures)**:
-        1.  Pull the latest changes from Git: `git pull`
-        2.  Re-run `./setup.sh`. Answer `y` (yes) to push, which will update the multi-arch manifest on Docker Hub with the image for that specific architecture.
+4.  **Update Docker Hub Image & All Machines**:
+    *   **Current Machine**:
+        1.  Ensure `DOCKERHUB_USERNAME` is set in `setup.sh`.
+        2.  Re-run `./setup.sh`. Answer `y` (yes) to push, updating the Docker Hub image for the current architecture.
+    *   **Other Machines (different architectures)**:
+        1.  `git pull` to get the latest configuration.
+        2.  Ensure `DOCKERHUB_USERNAME` is set in `setup.sh`.
+        3.  Re-run `./setup.sh`. Answer `y` (yes) to push, updating the multi-arch manifest on Docker Hub with the image for that architecture.
 
-    This process ensures all your local environments are updated and the multi-arch image on Docker Hub reflects the latest configuration for all architectures.
+This process keeps local environments and the multi-arch Docker Hub image synchronized.
