@@ -1,0 +1,58 @@
+# Filename: .gitignore
+# =====================
+#
+# Ignore local build artifacts and sensitive files.
+
+# Ignore container backup files
+*.tar
+*.tar.gz
+
+# Ignore local user configuration
+*.local
+
+# --- Common Ignores ---
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Editor/IDE specific files and directories
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Log files
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# R specific files
+.Rhistory
+.RData
+.RDataTmp
+.Rproj.user/
+.Renviron
+*-Ex.R
+
+# Temporary files and directories
+tmp/
+temp/
+
+# Node modules (if ever used with R Shiny or other JS tools)
+node_modules/
+
+# Python specific (if radian or other Python tools generate cache)
+__pycache__/
+*.pyc
+*.pyo
+.Python
+env/
+venv/
+ENV/
+VENV/
+.venv/
