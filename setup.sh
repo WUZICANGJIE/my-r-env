@@ -50,14 +50,18 @@ case "$choice" in
 esac
 
 # --- Step 3: Create the Distrobox container ---
-echo ">>> Preparing container home directory..."
-mkdir -p "$CONTAINER_HOME_DIR"
 
 # Check if a container with the same name already exists and remove it to ensure a fresh start.
 if podman ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
     echo ">>> Found an existing container named '${CONTAINER_NAME}'. Removing it..."
     distrobox rm -f "$CONTAINER_NAME"
 fi
+
+echo ">>> Preparing container home directory..."
+mkdir -p "$CONTAINER_HOME_DIR"
+
+echo ">>> Copying .Rprofile to container home directory..."
+cp .Rprofile "$CONTAINER_HOME_DIR"
 
 echo ">>> Creating Distrobox container '${CONTAINER_NAME}'..."
 distrobox-create --name "$CONTAINER_NAME" \

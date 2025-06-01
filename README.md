@@ -25,6 +25,11 @@ On each machine:
 2.  **Podman**
 3.  **Distrobox**
 
+## VSCode Integration
+
+For integrating VSCode (expecially Flatpak version) with Distrobox environment, refer to this instruction:
+- [Integrate VSCode with Distrobox](https://github.com/89luca89/distrobox/blob/main/docs/posts/integrate_vscode_distrobox.md#from-flatpak)
+
 ## The Workflow
 
 The core idea is to build architecture-specific images (`x86_64`, `arm64`) on each machine and push them to the **same tag** on Docker Hub. Docker Hub creates a multi-arch manifest.
