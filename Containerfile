@@ -65,7 +65,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     texlive-fonts-recommended \
     texlive-latex-extra \
     lmodern \
-    texlive-lang-cjk && \
+    texlive-lang-cjk \
+    latexmk && \
     rm -rf /var/lib/apt/lists/*
 
 # --- 3. Install R Packages ---
