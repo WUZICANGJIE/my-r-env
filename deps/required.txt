@@ -1,0 +1,4 @@
+# Development libraries that R actually requires
+# These should NOT be removed as R base packages depend on them
+libpng-dev
+libjpeg-dev

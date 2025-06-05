@@ -1,0 +1,11 @@
+# Development libraries that can be safely removed
+# These are not directly required by R base packages
+libssl-dev
+libcurl4-openssl-dev
+libxml2-dev
+libfontconfig1-dev
+libfreetype6-dev
+libharfbuzz-dev
+libfribidi-dev
+libtiff5-dev
+libmagick++-dev

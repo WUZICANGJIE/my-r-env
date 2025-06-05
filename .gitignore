@@ -3,19 +3,37 @@
 #
 # Ignore local build artifacts and sensitive files.
 
-# Ignore container backup files
+# --- Project Specific ---
+
+# Backup directory (contains legacy files)
+.backup/
+
+# Container backup files
 *.tar
 *.tar.gz
 
-# Ignore local user configuration
+# Local user configuration
 *.local
 
-# --- Common Ignores ---
+# --- System & Temporary Files ---
 
 # OS-generated files
 .DS_Store
 Thumbs.db
 ehthumbs.db
+
+# Temporary files and directories
+tmp/
+temp/
+
+# Log files
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Editor/IDE ---
 
 # Editor/IDE specific files and directories
 .vscode/
@@ -24,12 +42,7 @@ ehthumbs.db
 *.swo
 *~
 
-# Log files
-*.log
-logs/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# --- Development Environment ---
 
 # R specific files
 .Rhistory
@@ -39,14 +52,7 @@ yarn-error.log*
 .Renviron
 *-Ex.R
 
-# Temporary files and directories
-tmp/
-temp/
-
-# Node modules (if ever used with R Shiny or other JS tools)
-node_modules/
-
-# Python specific (if radian or other Python tools generate cache)
+# Python specific (radian cache and virtual environments)
 __pycache__/
 *.pyc
 *.pyo
@@ -56,3 +62,6 @@ venv/
 ENV/
 VENV/
 .venv/
+
+# Node modules (for R Shiny or JS tools)
+node_modules/

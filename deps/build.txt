@@ -1,0 +1,8 @@
+# Build-time dependencies that can be removed after installation
+# These are tools needed for building and compiling but not for runtime
+software-properties-common
+gnupg
+dirmngr
+make
+cmake
+unzip

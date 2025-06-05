@@ -1,0 +1,7 @@
+# Runtime dependencies that should always be kept
+# These are needed for normal operation of the container
+ca-certificates
+curl
+wget
+git
+pandoc
