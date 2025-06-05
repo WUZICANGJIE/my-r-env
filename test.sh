@@ -89,6 +89,7 @@ command_exists() {
 check_docker() {
     print_status "info" "Checking Docker installation..."
     
+    # First check if docker command exists in PATH
     if command_exists docker; then
         print_status "success" "Docker is installed"
         
@@ -98,6 +99,39 @@ check_docker() {
         print_status "info" "Docker version: $docker_version"
         
         return 0
+    elif [[ "$IS_WSL" == true ]]; then
+        # Check for Docker Desktop on Windows (WSL integration)
+        print_status "info" "Checking for Docker Desktop on Windows..."
+        
+        # Check common Windows Docker Desktop paths
+        local windows_docker_paths=(
+            "/mnt/c/Program Files/Docker/Docker/resources/bin/docker.exe"
+            "/mnt/c/Users/$USER/AppData/Local/Docker/Docker/resources/bin/docker.exe"
+            "/mnt/c/Program Files/Docker/Docker/Docker Desktop.exe"
+        )
+        
+        for docker_path in "${windows_docker_paths[@]}"; do
+            if [[ -f "$docker_path" ]]; then
+                print_status "success" "Found Docker Desktop on Windows at: $docker_path"
+                return 0
+            fi
+        done
+        
+        # Check if Docker Desktop WSL integration is enabled
+        if [[ -S "/var/run/docker.sock" ]] || [[ -S "$HOME/.docker/run/docker.sock" ]]; then
+            print_status "success" "Docker Desktop WSL integration detected"
+            return 0
+        fi
+        
+        # Check for docker.exe in Windows PATH
+        if command_exists docker.exe; then
+            print_status "success" "Docker Desktop found via docker.exe"
+            DOCKER_COMMAND="docker.exe"
+            return 0
+        fi
+        
+        print_status "error" "Docker Desktop not found or WSL integration not enabled"
+        return 1
     else
         print_status "error" "Docker is not installed"
         return 1
@@ -108,13 +142,61 @@ check_docker() {
 check_docker_daemon() {
     print_status "info" "Checking Docker daemon status..."
     
-    if docker info >/dev/null 2>&1; then
+    # First try standard docker info
+    if $DOCKER_COMMAND info >/dev/null 2>&1; then
         print_status "success" "Docker daemon is running"
         return 0
-    else
-        print_status "error" "Docker daemon is not running"
-        return 1
     fi
+    
+    # If in WSL, check Docker Desktop specific scenarios
+    if [[ "$IS_WSL" == true ]]; then
+        print_status "info" "WSL detected, checking Docker Desktop status..."
+        
+        # Check if Docker Desktop is running on Windows
+        if command_exists powershell.exe; then
+            local docker_desktop_running
+            docker_desktop_running=$(powershell.exe -Command "Get-Process 'Docker Desktop' -ErrorAction SilentlyContinue | Measure-Object | Select-Object -ExpandProperty Count" 2>/dev/null || echo "0")
+            
+            if [[ "$docker_desktop_running" -gt 0 ]]; then
+                print_status "info" "Docker Desktop is running on Windows"
+                
+                # Wait a moment for Docker to be fully ready
+                print_status "info" "Waiting for Docker Desktop to be ready..."
+                for i in {1..30}; do
+                    if $DOCKER_COMMAND info >/dev/null 2>&1; then
+                        print_status "success" "Docker daemon is now accessible"
+                        return 0
+                    fi
+                    sleep 1
+                done
+                
+                print_status "warning" "Docker Desktop is running but daemon is not accessible from WSL"
+            else
+                print_status "warning" "Docker Desktop is not running on Windows"
+            fi
+        fi
+        
+        # Check for docker socket files
+        if [[ -S "/var/run/docker.sock" ]]; then
+            print_status "info" "Found Docker socket at /var/run/docker.sock"
+            if $DOCKER_COMMAND info >/dev/null 2>&1; then
+                print_status "success" "Docker daemon is accessible via socket"
+                return 0
+            fi
+        fi
+        
+        if [[ -S "$HOME/.docker/run/docker.sock" ]]; then
+            print_status "info" "Found Docker socket at $HOME/.docker/run/docker.sock"
+            export DOCKER_HOST="unix://$HOME/.docker/run/docker.sock"
+            if $DOCKER_COMMAND info >/dev/null 2>&1; then
+                print_status "success" "Docker daemon is accessible via user socket"
+                return 0
+            fi
+        fi
+    fi
+    
+    print_status "error" "Docker daemon is not running"
+    return 1
 }
 
 # Function to handle Docker daemon not running
@@ -124,29 +206,82 @@ handle_docker_daemon_not_running() {
     echo
     
     if [[ "$IS_WSL" == true ]]; then
-        print_status "info" "WSL detected. Docker daemon is likely not running because:"
+        print_status "info" "WSL detected. Docker daemon issues can be caused by:"
         echo "  1. Docker Desktop is not started on Windows"
-        echo "  2. Docker service is not running in WSL"
+        echo "  2. Docker Desktop WSL integration is not enabled"
+        echo "  3. Docker service is not running in WSL"
         echo
-        print_status "info" "To fix this:"
-        echo "  • Start Docker Desktop on Windows, OR"
-        echo "  • Install Docker directly in WSL with: sudo systemctl start docker"
-        echo
-        echo "Would you like to try starting the Docker service in WSL? (y/N)"
-        read -r response
         
-        if [[ "$response" =~ ^[Yy]$ ]]; then
-            print_status "info" "Attempting to start Docker service in WSL..."
-            if sudo systemctl start docker 2>/dev/null; then
-                print_status "success" "Docker service started successfully"
-                return 0
+        # Check if Docker Desktop is installed on Windows
+        local docker_desktop_found=false
+        if [[ -f "/mnt/c/Program Files/Docker/Docker/Docker Desktop.exe" ]]; then
+            docker_desktop_found=true
+            print_status "info" "Docker Desktop found at: /mnt/c/Program Files/Docker/Docker/Docker Desktop.exe"
+        fi
+        
+        if [[ "$docker_desktop_found" == true ]]; then
+            print_status "info" "To fix Docker Desktop issues:"
+            echo "  1. Start Docker Desktop on Windows:"
+            echo "     • Open Docker Desktop from Windows Start Menu"
+            echo "     • Or run: powershell.exe -Command \"Start-Process 'C:\\Program Files\\Docker\\Docker\\Docker Desktop.exe'\""
+            echo "  2. Enable WSL integration in Docker Desktop:"
+            echo "     • Settings → Resources → WSL Integration"
+            echo "     • Enable integration for your WSL distribution"
+            echo "  3. Wait for Docker Desktop to fully start (usually 10-20 seconds)"
+            echo
+            
+            echo "Would you like to try starting Docker Desktop from Windows? (y/N)"
+            read -r response
+            
+            if [[ "$response" =~ ^[Yy]$ ]]; then
+                print_status "info" "Attempting to start Docker Desktop on Windows..."
+                if powershell.exe -Command "Start-Process 'C:\\Program Files\\Docker\\Docker\\Docker Desktop.exe'" 2>/dev/null; then
+                    print_status "info" "Docker Desktop start command sent. Please wait for it to fully start..."
+                    
+                    # Wait for Docker Desktop to start
+                    print_status "info" "Waiting up to 60 seconds for Docker Desktop to be ready..."
+                    for i in {1..60}; do
+                        if $DOCKER_COMMAND info >/dev/null 2>&1; then
+                            print_status "success" "Docker Desktop is now ready!"
+                            return 0
+                        fi
+                        if [[ $((i % 5)) -eq 0 ]]; then
+                            echo -n "."
+                        fi
+                        sleep 1
+                    done
+                    echo
+                    print_status "warning" "Docker Desktop may still be starting. Please wait a bit more and try again."
+                    return 1
+                else
+                    print_status "error" "Failed to start Docker Desktop. Please start it manually from Windows."
+                    return 1
+                fi
             else
-                print_status "error" "Failed to start Docker service. Please start Docker Desktop on Windows instead."
+                print_status "info" "Please start Docker Desktop manually on Windows and ensure WSL integration is enabled."
                 return 1
             fi
         else
-            print_status "info" "Please start Docker Desktop on Windows and rerun this script."
-            return 1
+            print_status "info" "Docker Desktop not found in standard location. Alternative solutions:"
+            echo "  • Install Docker directly in WSL: sudo systemctl start docker"
+            echo "  • Or ensure Docker Desktop is properly installed on Windows"
+            echo
+            echo "Would you like to try starting the Docker service in WSL? (y/N)"
+            read -r response
+            
+            if [[ "$response" =~ ^[Yy]$ ]]; then
+                print_status "info" "Attempting to start Docker service in WSL..."
+                if sudo systemctl start docker 2>/dev/null; then
+                    print_status "success" "Docker service started successfully in WSL"
+                    return 0
+                else
+                    print_status "error" "Failed to start Docker service in WSL. Please install Docker in WSL or use Docker Desktop."
+                    return 1
+                fi
+            else
+                print_status "info" "Please start Docker Desktop on Windows or install Docker in WSL."
+                return 1
+            fi
         fi
     else
         print_status "info" "Please start the Docker daemon:"
@@ -256,7 +391,7 @@ install_docker() {
 check_buildkit() {
     print_status "info" "Checking Docker BuildKit support..."
     
-    if docker buildx version >/dev/null 2>&1; then
+    if $DOCKER_COMMAND buildx version >/dev/null 2>&1; then
         print_status "success" "Docker BuildKit is available"
         export DOCKER_BUILDKIT=1
         return 0
