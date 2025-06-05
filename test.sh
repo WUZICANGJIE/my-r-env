@@ -117,14 +117,78 @@ check_docker_daemon() {
     fi
 }
 
+# Function to handle Docker daemon not running
+handle_docker_daemon_not_running() {
+    echo
+    print_status "warning" "Docker is installed but the daemon is not running"
+    echo
+    
+    if [[ "$IS_WSL" == true ]]; then
+        print_status "info" "WSL detected. Docker daemon is likely not running because:"
+        echo "  1. Docker Desktop is not started on Windows"
+        echo "  2. Docker service is not running in WSL"
+        echo
+        print_status "info" "To fix this:"
+        echo "  • Start Docker Desktop on Windows, OR"
+        echo "  • Install Docker directly in WSL with: sudo systemctl start docker"
+        echo
+        echo "Would you like to try starting the Docker service in WSL? (y/N)"
+        read -r response
+        
+        if [[ "$response" =~ ^[Yy]$ ]]; then
+            print_status "info" "Attempting to start Docker service in WSL..."
+            if sudo systemctl start docker 2>/dev/null; then
+                print_status "success" "Docker service started successfully"
+                return 0
+            else
+                print_status "error" "Failed to start Docker service. Please start Docker Desktop on Windows instead."
+                return 1
+            fi
+        else
+            print_status "info" "Please start Docker Desktop on Windows and rerun this script."
+            return 1
+        fi
+    else
+        print_status "info" "Please start the Docker daemon:"
+        case "$DETECTED_DISTRO" in
+            "ubuntu"|"debian"|"arch"|"manjaro"|"fedora"|"centos"|"rhel")
+                echo "  sudo systemctl start docker"
+                echo "  sudo systemctl enable docker  # (to start on boot)"
+                ;;
+            *)
+                echo "  Please refer to your system's documentation for starting Docker"
+                ;;
+        esac
+        echo
+        echo "Would you like to try starting Docker now? (y/N)"
+        read -r response
+        
+        if [[ "$response" =~ ^[Yy]$ ]]; then
+            print_status "info" "Attempting to start Docker service..."
+            if sudo systemctl start docker 2>/dev/null; then
+                print_status "success" "Docker service started successfully"
+                # Give Docker a moment to fully start
+                sleep 2
+                return 0
+            else
+                print_status "error" "Failed to start Docker service. Please start it manually."
+                return 1
+            fi
+        else
+            print_status "info" "Please start Docker manually and rerun this script."
+            return 1
+        fi
+    fi
+}
+
 # Function to install Docker on different systems
 install_docker() {
     local install_docker=false
     
     echo
-    print_status "warning" "Docker is not installed or not running properly"
+    print_status "warning" "Docker is not installed"
     echo
-    echo "Would you like to install/setup Docker? (y/N)"
+    echo "Would you like to install Docker? (y/N)"
     read -r response
     
     if [[ "$response" =~ ^[Yy]$ ]]; then
@@ -377,9 +441,10 @@ show_help() {
     echo "  1. Detects your operating system and distribution"
     echo "  2. Checks Docker installation and status"
     echo "  3. Offers to install Docker if missing"
-    echo "  4. Validates all project files and dependencies"
-    echo "  5. Checks system requirements"
-    echo "  6. Prompts to run the build script"
+    echo "  4. Helps start Docker daemon if not running (common in WSL)"
+    echo "  5. Validates all project files and dependencies"
+    echo "  6. Checks system requirements"
+    echo "  7. Prompts to run the build script"
 }
 
 # Main function
@@ -430,26 +495,55 @@ main() {
     
     # Step 4: Docker setup
     if [[ "$skip_docker" == false ]]; then
-        local docker_ok=true
+        local docker_installed=false
+        local docker_daemon_running=false
         
-        if ! check_docker; then
-            docker_ok=false
-        elif ! check_docker_daemon; then
-            docker_ok=false
+        # Check if Docker is installed
+        if check_docker; then
+            docker_installed=true
+            
+            # Check if Docker daemon is running
+            if check_docker_daemon; then
+                docker_daemon_running=true
+            fi
         fi
         
-        if [[ "$docker_ok" == false ]]; then
+        # Handle different Docker states
+        if [[ "$docker_installed" == false ]]; then
+            # Docker not installed - offer to install
             if ! install_docker; then
-                print_status "error" "Docker setup failed. Please install Docker manually and rerun this script."
+                print_status "error" "Docker installation failed or was skipped. Please install Docker manually and rerun this script."
                 exit 1
             fi
             
             # Re-check after installation
-            if ! check_docker || ! check_docker_daemon; then
-                print_status "error" "Docker is still not working after installation. Please check the installation and try again."
+            if ! check_docker; then
+                print_status "error" "Docker installation verification failed."
+                exit 1
+            fi
+            
+            # Check daemon after installation
+            if ! check_docker_daemon; then
+                print_status "error" "Docker daemon is not running after installation. Please start Docker and try again."
+                exit 1
+            fi
+            
+        elif [[ "$docker_installed" == true && "$docker_daemon_running" == false ]]; then
+            # Docker installed but daemon not running - offer to start
+            if ! handle_docker_daemon_not_running; then
+                print_status "error" "Docker daemon setup failed. Please start Docker manually and rerun this script."
+                exit 1
+            fi
+            
+            # Verify daemon is now running
+            if ! check_docker_daemon; then
+                print_status "error" "Docker daemon is still not running. Please check Docker status and try again."
                 exit 1
             fi
         fi
+        
+        # At this point, Docker should be installed and running
+        print_status "success" "Docker is ready!"
         
         # Check BuildKit
         check_buildkit

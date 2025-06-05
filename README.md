@@ -281,6 +281,11 @@ vim deps/required.txt     # Add required dev libraries
 - On Linux: You may need to log out and back in after installation
 - Manual installation: See [Docker docs](https://docs.docker.com/engine/install/)
 
+**Docker daemon not running:**
+- Script will detect and offer to start Docker daemon
+- On WSL: Either start Docker Desktop on Windows or start service in WSL
+- On Linux: Script can attempt `sudo systemctl start docker`
+
 **Container name conflicts:**
 - `local.sh` automatically removes existing containers
 

@@ -1,8 +1,12 @@
 # GitHub Copilot Instructions
 
+## Shell Environment
+
+**Important**: The user is using fish shell as their default shell. When generating terminal commands or shell scripts, always use fish shell syntax instead of bash/zsh. Do not assume bash compatibility.
+
 ## Planning and Task Management
 
-Before doing anything, ask me if it's necessary to create a detailed checklist markdown file that categorizes the upcoming work in the `.checklist` directory. Ask me all the questions that should be confirmed in advance when making plans.
+**Important**: Before doing anything, ask me if it's necessary to create a detailed checklist markdown file that categorizes the upcoming work in the `.checklist` directory. Ask me all the questions that should be confirmed in advance when making plans.
 
 ## Project Context
 
