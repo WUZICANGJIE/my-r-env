@@ -51,17 +51,7 @@ my-r-env/
 │   └── env-verify.sh        # Container verification script
 │
 ├── 📦 Dependency Management
-│   └── deps/                 # Centralized system dependency definitions
-│       ├── build.txt         # Build-time dependencies (removed after)
-│       ├── removable.txt     # Dev libraries (removable)
-│       ├── required.txt      # Dev libraries (required by R)
-│       ├── runtime.txt       # Runtime dependencies (always kept)
-│       ├── load.sh           # Dependency loader for scripts
-│       ├── load-docker.sh    # Docker-specific loader
-│       ├── gen-args.sh       # Generate Containerfile ARGs
-│       ├── update.sh         # Update Containerfile with deps
-│       ├── validate.sh       # Validate dependency files
-│       └── README.md         # Dependency documentation
+│   └── system-packages.txt          # System dependencies (apt packages)
 │
 ├── 🔧 R Environment
 │   ├── .Rprofile             # R startup configuration
@@ -70,9 +60,6 @@ my-r-env/
 │   │   ├── activate.R        # renv activation script
 │   │   └── settings.json     # renv settings
 │   └── init_renv.R           # Package initialization script
-│
-├── 🐛 Development Tools
-│   └── debug.sh              # Dependency debugging script
 │
 └── 🗄️ Backup & Archive
     └── .backup/              # Legacy files and backups
@@ -100,11 +87,9 @@ The `env-setup.sh` script provides comprehensive environment validation:
 
 ### Dependency Management
 
-| Script | Purpose | Usage |
-|--------|---------|-------|
-| `deps/update.sh` | Update Containerfile with latest deps | `./deps/update.sh` |
-| `deps/validate.sh` | Validate all dependency files | `./deps/validate.sh` |
-| `deps/gen-args.sh` | Generate Containerfile ARGs | `./deps/gen-args.sh` |
+| File | Purpose | Usage |
+|------|---------|-------|
+| `system-packages.txt` | System dependencies (apt packages) | Edit directly, then rebuild |
 
 ## 🐳 Container Features
 
@@ -159,7 +144,7 @@ renv::snapshot()                 # Update lockfile
 
 # Rebuild container to persist
 exit
-./build.sh
+./docker-build.sh
 ```
 
 ## 🔄 Development Workflow
@@ -168,7 +153,7 @@ exit
 
 ```bash
 # 1. Start development environment
-./local.sh
+./docker-run-local.sh
 
 # 2. Work in R session
 R  # or radian for enhanced console
@@ -179,18 +164,18 @@ renv::snapshot()
 
 # 4. Exit and rebuild if packages changed
 exit
-./build.sh  # Only if packages were added/updated
+./docker-build.sh  # Only if packages were added/updated
 ```
 
 ### Team Collaboration
 
 ```bash
 # Team lead: Share environment
-./build.sh                    # Build locally
+./docker-build.sh             # Build locally
 # Select 'y' to push to Docker Hub
 
 # Team members: Use shared environment
-./hub.sh                      # Pull and run from Docker Hub
+./docker-run-hub.sh           # Pull and run from Docker Hub
 ```
 
 ## ⚡ Performance Features
@@ -227,8 +212,8 @@ For debugging build issues or developing new features, you can build the contain
 # Build in debug mode (keeps all build dependencies)
 docker build --build-arg KEEP_DEPS=true -t my-r-env-debug .
 
-# Or modify build.sh to use debug mode
-KEEP_DEPS=true ./build.sh
+# Or modify docker-build.sh to use debug mode
+KEEP_DEPS=true ./docker-build.sh
 ```
 
 **Debug mode differences:**
@@ -239,27 +224,27 @@ KEEP_DEPS=true ./build.sh
 
 ### Docker Hub Integration
 
-1. **Configure username** in `build.sh`:
+1. **Configure username** in `docker-build.sh`:
    ```bash
    DOCKERHUB_USERNAME="your-username"
    ```
 
 2. **Build and push**:
    ```bash
-   ./build.sh
+   ./docker-build.sh
    # Choose 'y' when prompted to push
    ```
 
 3. **Use on other machines**:
    ```bash
-   ./hub.sh
+   ./docker-run-hub.sh
    ```
 
 ### Manual Docker Commands
 
 ```bash
 # Build manually
-docker build -t my-r-env -f Containerfile .
+docker build -t my-r-env -f Dockerfile .
 
 # Build in debug mode (keeps build dependencies)
 docker build --build-arg KEEP_DEPS=true -t my-r-env-debug .
@@ -275,18 +260,14 @@ docker run -it --rm \
 
 ### System Dependencies
 
-The centralized dependency management system allows easy modification of system packages:
+System packages can be easily modified by editing the system-packages.txt file:
 
 ```bash
-# Edit dependency files
-vim deps/runtime.txt      # Add runtime dependencies
-vim deps/build.txt        # Add build tools
-vim deps/required.txt     # Add required dev libraries
+# Edit system dependencies
+vim system-packages.txt             # Add/remove system packages
 
-# Update container
-./deps/update.sh          # Update Containerfile
-./deps/validate.sh        # Validate changes
-./build.sh               # Rebuild container
+# Rebuild container with new dependencies
+./docker-build.sh           # Rebuild container
 ```
 
 ## 🔍 Troubleshooting
@@ -294,9 +275,9 @@ vim deps/required.txt     # Add required dev libraries
 ### Common Issues
 
 **Setup script fails:**
-- Run with `./test.sh --help` to see all options
-- Use `./test.sh --skip-docker` if Docker is already configured
-- Check permissions: `chmod +x test.sh`
+- Run with `./env-setup.sh --help` to see all options
+- Use `./env-setup.sh --skip-docker` if Docker is already configured
+- Check permissions: `chmod +x env-setup.sh`
 
 **Docker installation issues:**
 - On WSL: Ensure Docker Desktop is running on Windows
@@ -309,7 +290,7 @@ vim deps/required.txt     # Add required dev libraries
 - On Linux: Script can attempt `sudo systemctl start docker`
 
 **Container name conflicts:**
-- `local.sh` automatically removes existing containers
+- `docker-run-local.sh` automatically removes existing containers
 
 **Build performance:**
 - Setup script automatically enables Docker BuildKit
@@ -324,19 +305,16 @@ vim deps/required.txt     # Add required dev libraries
 
 ```bash
 # Complete system setup and validation
-./test.sh
+./env-setup.sh
 
 # System setup without prompting for build
-./test.sh --no-build
+./env-setup.sh --no-build
 
 # Skip Docker checks (if already configured)
-./test.sh --skip-docker
+./env-setup.sh --skip-docker
 
-# Debug system dependencies
-./debug.sh
-
-# Validate dependency files
-./deps/validate.sh
+# Verify container environment
+./env-verify.sh
 
 # Check Docker cache usage
 docker buildx du
@@ -344,17 +322,17 @@ docker buildx du
 
 ## 📚 Additional Resources
 
-- **Dependency Management**: See `deps/README.md` for detailed documentation
+- **System Dependencies**: Managed via `system-packages.txt` file
 - **renv Documentation**: https://rstudio.github.io/renv/
 - **Docker BuildKit**: https://docs.docker.com/develop/dev-best-practices/
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Make changes and test with `./build.sh`
+2. Make changes and test with `./docker-build.sh`
 3. Update documentation if needed
 4. Submit a pull request
 
 ---
 
-**Ready to develop?** Run `./build.sh` followed by `./local.sh` to get started with your reproducible R environment! 🎉
+**Ready to develop?** Run `./docker-build.sh` followed by `./docker-run-local.sh` to get started with your reproducible R environment! 🎉

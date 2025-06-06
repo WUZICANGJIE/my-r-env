@@ -1,6 +1,6 @@
 # syntax = docker/dockerfile:1
-# Simplified Containerfile with consolidated dependency management
-# All system dependencies are defined in a single packages.txt file
+# Simplified Dockerfile with consolidated dependency management
+# All system dependencies are defined in a single system-packages.txt file
 
 FROM ubuntu:24.04
 
@@ -9,15 +9,15 @@ ENV PIP_CACHE_DIR=/var/cache/buildkit/pip
 ENV RENV_PATHS_CACHE=/renv/cache
 
 # --- 1. Copy dependency definitions ---
-COPY packages.txt /tmp/packages.txt
+COPY system-packages.txt /tmp/system-packages.txt
 
 # --- 2. Install system dependencies ---
 RUN rm -f /etc/apt/apt.conf.d/docker-clean && \
     mkdir -p $PIP_CACHE_DIR $RENV_PATHS_CACHE && \
     # Install all dependencies from single file
     apt-get update && \
-    grep -v '^#' /tmp/packages.txt | grep -v '^$' | xargs apt-get install -y --no-install-recommends && \
-    rm -rf /var/lib/apt/lists/* /tmp/packages.txt
+    grep -v '^#' /tmp/system-packages.txt | grep -v '^$' | xargs apt-get install -y --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/* /tmp/system-packages.txt
 
 # --- 3. Install R from CRAN ---
 RUN wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc && \

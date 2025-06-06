@@ -67,7 +67,7 @@ case $post_build_choice in
         echo "🚀 Manual options:"
         echo ""
         echo "1️⃣  Start the container interactively:"
-        echo "    ./local.sh"
+        echo "    ./docker-run-local.sh"
         echo ""
         echo "2️⃣  Run verification tests:"
         echo "    ./verify.sh  # (inside container)"
