@@ -406,7 +406,7 @@ validate_project_files() {
     print_status "info" "Validating project files..."
     
     # Check main scripts
-    local scripts=("build.sh" "local.sh" "hub.sh" "debug.sh")
+    local scripts=("build.sh" "local.sh" "hub.sh")
     for script in "${scripts[@]}"; do
         if [[ -x "$script" ]]; then
             print_status "success" "$script: EXISTS and EXECUTABLE"
@@ -723,7 +723,6 @@ main() {
     echo "  ./build.sh     - Build the container"
     echo "  ./local.sh     - Run locally built container"
     echo "  ./hub.sh       - Run from Docker Hub"
-    echo "  ./debug.sh     - Debug dependencies"
     echo "  ./deps/        - Manage dependencies"
     echo
 }

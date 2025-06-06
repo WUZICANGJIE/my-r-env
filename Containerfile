@@ -74,13 +74,24 @@ COPY renv/settings.json renv/settings.json
 RUN --mount=type=cache,target=/renv/cache \
     R --vanilla -e "renv::restore()"
 
-# --- 9. Remove build-time dependencies ---
-RUN bash -c ". /tmp/deps/load-docker.sh && \
-    apt-get update && apt-get purge -y --auto-remove \
-    \$BUILD_DEPS \
-    \$DEV_LIBS_REMOVABLE" \
-    && rm -rf /var/lib/apt/lists/* /tmp/deps && \
-    apt-get clean
+# --- 9. Remove build-time dependencies with debug---
+RUN ["bash","-lc", "source /tmp/deps/load-docker.sh && apt-get update && \
+ mkdir -p /project/logs && \
+ debug_log=/project/logs/apt-purge-debug.log && :> \"$debug_log\" && \
+ echo \"=== DEPENDENCY DEBUG ANALYSIS ===\" && \
+ for pkg in $BUILD_DEPS $DEV_LIBS_REMOVABLE; do \
+   echo \"Checking reverse dependencies for: $pkg\" && \
+   rdeps=$(apt-cache rdepends \"$pkg\" 2>/dev/null || echo \"No reverse dependencies\") && \
+   echo \"$rdeps\" | tee -a \"$debug_log\" && \
+   if echo \"$rdeps\" | grep -E 'r-base(|-dev)'; then \
+     echo \"ERROR: Package $pkg reverse-depends on R (see above)\" >&2 && exit 1; \
+   fi; \
+ done && \
+ echo \"=== PROCEEDING WITH PACKAGE REMOVAL ===\" && \
+ apt-get purge -y --auto-remove $BUILD_DEPS $DEV_LIBS_REMOVABLE && \
+ rm -rf /var/lib/apt/lists/* /tmp/deps && \
+ apt-get clean && \
+ R --version > /dev/null 2>&1 || { echo \"ERROR: R was removed during cleanup step! Build failed.\"; exit 1; }"]
 
 # --- 10. Configure Starship prompt ---
 RUN mkdir -p /root/.config && \

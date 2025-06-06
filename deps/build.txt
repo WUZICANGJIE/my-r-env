@@ -5,4 +5,3 @@ gnupg
 dirmngr
 make
 cmake
-unzip

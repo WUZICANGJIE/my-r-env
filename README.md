@@ -218,6 +218,24 @@ RUN --mount=type=cache,target=/renv/cache
 
 ## 🛠️ Advanced Configuration
 
+### Debug Mode
+
+For debugging build issues or developing new features, you can build the container with all dependencies kept:
+
+```bash
+# Build in debug mode (keeps all build dependencies)
+docker build --build-arg KEEP_DEPS=true -t my-r-env-debug .
+
+# Or modify build.sh to use debug mode
+KEEP_DEPS=true ./build.sh
+```
+
+**Debug mode differences:**
+- All build tools and development libraries remain installed
+- Larger image size but full debugging capabilities  
+- Useful for troubleshooting dependency issues
+- Package cache is still cleaned for efficiency
+
 ### Docker Hub Integration
 
 1. **Configure username** in `build.sh`:
@@ -241,6 +259,9 @@ RUN --mount=type=cache,target=/renv/cache
 ```bash
 # Build manually
 docker build -t my-r-env -f Containerfile .
+
+# Build in debug mode (keeps build dependencies)
+docker build --build-arg KEEP_DEPS=true -t my-r-env-debug .
 
 # Run with proper mounts
 docker run -it --rm \
@@ -292,6 +313,7 @@ vim deps/required.txt     # Add required dev libraries
 **Build performance:**
 - Setup script automatically enables Docker BuildKit
 - Check cache status: `docker system df`
+- Use debug mode to troubleshoot build issues: `--build-arg KEEP_DEPS=true`
 
 **Package issues:**
 - Reset renv: `renv::restore()`

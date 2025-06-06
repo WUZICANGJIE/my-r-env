@@ -92,16 +92,92 @@ echo ""
 echo "================================================="
 echo ">>> Build complete!"
 echo "================================================="
+
+# --- Automated Verification Option ---
 echo ""
-echo "To run the container:"
-echo "  ./local.sh"
+read -p "Do you want to run verification tests now? (y/N) " -n 1 -r verify_choice
 echo ""
-echo "Or manually:"
-echo "  docker run -it --rm \\"
-echo "    -e 'RENV_PATHS_CACHE=/renv/cache' \\"
-echo "    -v '$RENV_CACHE_HOST:/renv/cache' \\"
-echo "    -v '\$(pwd):/project' \\"
-echo "    -w /project \\"
-echo "    $IMAGE_NAME"
+
+if [[ $verify_choice =~ ^[Yy]$ ]]; then
+    echo ">>> Running comprehensive verification tests..."
+    echo ""
+    
+    # Create temporary container name for inspection
+    VERIFY_CONTAINER="r-verify-$(date +%s)"
+    
+    echo "🔍 Running verification in persistent container for inspection..."
+    
+    # Run verification in named container (not --rm) so we can inspect it
+    if docker run --name "$VERIFY_CONTAINER" \
+        -e "RENV_PATHS_CACHE=/renv/cache" \
+        -v "$RENV_CACHE_HOST:/renv/cache" \
+        -v "$(pwd):/project" \
+        -w /project \
+        "$IMAGE_NAME" ./verify.sh; then
+        
+        echo ""
+        echo "✅ Verification completed successfully!"
+        echo ""
+        
+        # Get actual verification counts from the log
+        TOTAL_CHECKS=$(docker exec "$VERIFY_CONTAINER" grep -o "Total checks: [0-9]*" /project/logs/verification_summary.log | grep -o "[0-9]*" || echo "unknown")
+        PASSED_CHECKS=$(docker exec "$VERIFY_CONTAINER" grep -o "Passed: [0-9]*" /project/logs/verification_summary.log | grep -o "[0-9]*" || echo "unknown")
+        
+        echo "🎉 VERIFICATION SUCCESSFUL!"
+        echo "   - All $TOTAL_CHECKS verification checks passed ($PASSED_CHECKS/$TOTAL_CHECKS)"
+        echo "   - R environment fully functional"
+        echo "   - Container image ready for use"
+        
+        # Clean up verification container
+        docker rm "$VERIFY_CONTAINER" >/dev/null 2>&1
+        
+    else
+        echo ""
+        echo "❌ Verification failed during initial checks!"
+        echo ""
+        echo "🔧 Container '$VERIFY_CONTAINER' preserved for debugging:"
+        echo "   Inspect with: docker exec -it $VERIFY_CONTAINER bash"
+        echo "   View logs: docker exec $VERIFY_CONTAINER ls -la /project/logs/"
+        echo "   Remove when done: docker rm $VERIFY_CONTAINER"
+        echo ""
+        echo "📋 Alternative verification:"
+        echo "   ./local.sh  # then run ./verify.sh inside"
+        docker stop "$VERIFY_CONTAINER" >/dev/null 2>&1
+        exit 1
+    fi
+else
+    echo ">>> Skipping verification. You can run it manually later."
+    echo ""
+    echo "🚀 Manual verification options:"
+    echo ""
+    echo "1️⃣  Start the container interactively:"
+    echo "    ./local.sh"
+    echo ""
+    echo "2️⃣  Inside the container, run verification tests:"
+    echo "    ./verify.sh"
+    echo ""
+    echo "📋 Alternative verification methods:"
+    echo ""
+    echo "• Quick verification in detached container:"
+    echo "  docker run --rm \\"
+    echo "    -e 'RENV_PATHS_CACHE=/renv/cache' \\"
+    echo "    -v '$RENV_CACHE_HOST:/renv/cache' \\"
+    echo "    -v '\$(pwd):/project' \\"
+    echo "    -w /project \\"
+    echo "    $IMAGE_NAME ./verify.sh"
+    echo ""
+    echo "• Start container in background for exec commands:"
+    echo "  docker run -d --name r-dev-temp \\"
+    echo "    -e 'RENV_PATHS_CACHE=/renv/cache' \\"
+    echo "    -v '$RENV_CACHE_HOST:/renv/cache' \\"
+    echo "    -v '\$(pwd):/project' \\"
+    echo "    -w /project \\"
+    echo "    $IMAGE_NAME tail -f /dev/null"
+    echo "  docker exec -it r-dev-temp ./verify.sh"
+    echo "  docker stop r-dev-temp && docker rm r-dev-temp"
+    echo ""
+    echo "💡 The verification script will show actual check counts when complete."
+fi
+
 echo ""
 echo "Docker Hub image (if pushed): $FULL_DOCKERHUB_NAME"

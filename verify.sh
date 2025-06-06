@@ -4,9 +4,8 @@
 
 SCRIPT_NAME="R Environment Verification"
 LOG_DIR="/project/logs"
-TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
-LOG_FILE="$LOG_DIR/verification_$TIMESTAMP.log"
-SUMMARY_FILE="$LOG_DIR/verification_summary_$TIMESTAMP.log"
+LOG_FILE="$LOG_DIR/verification.log"
+SUMMARY_FILE="$LOG_DIR/verification_summary.log"
 
 # Colors for output
 RED='\033[0;31m'
@@ -212,10 +211,11 @@ main() {
     # Create log directory
     mkdir -p "$LOG_DIR"
     
-    # Initialize log file
+    # Initialize log file with session timestamp
     cat > "$LOG_FILE" << EOF
 === $SCRIPT_NAME Log ===
 Started at: $(date)
+Session ID: $(date '+%Y%m%d_%H%M%S')
 
 EOF
     
