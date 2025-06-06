@@ -32,6 +32,26 @@
 - [ ] Verify cache reuse when only changing later layers
 - [ ] Test cache invalidation when dependency files change
 
+## 🧹 Code Cleanup Tasks
+
+### 3. **Unnecessary Scripts in deps/ Folder**
+- **Files**: `deps/gen-args.sh`, `deps/update.sh`
+- **Problem**: Scripts from earlier implementation approach not used by current build
+- **Priority**: Low
+- **Status**: Open
+
+**Analysis**:
+- `gen-args.sh` - Generates ARG definitions for Containerfile, but current build uses direct file reading
+- `update.sh` - Updates Containerfile using ARG approach, incompatible with current implementation
+- Current `Containerfile` reads dependency files directly via `load-docker.sh`
+
+**Cleanup tasks**:
+- [ ] Verify scripts are not referenced in any active builds
+- [ ] Remove `deps/gen-args.sh`
+- [ ] Remove `deps/update.sh`
+- [ ] Update `deps/README.md` to remove references to removed scripts
+- [ ] Test build process after removal to ensure no breakage
+
 ---
 
 **Last Updated**: June 6, 2025
