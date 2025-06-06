@@ -1,5 +1,5 @@
 #!/bin/bash
-# Pull and run R environment from Docker Hub
+# Docker pull and run R environment from Docker Hub
 
 set -e
 

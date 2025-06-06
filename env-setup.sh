@@ -1,5 +1,5 @@
 #!/bin/bash
-# Cross-platform setup and validation script for R development environment
+# Cross-platform environment setup and validation script for R development environment
 # Compatible with: Debian, Arch, Fedora, macOS, WSL
 
 set -e
@@ -401,84 +401,7 @@ check_buildkit() {
     fi
 }
 
-# Function to validate project files
-validate_project_files() {
-    print_status "info" "Validating project files..."
-    
-    # Check main scripts
-    local scripts=("build.sh" "local.sh" "hub.sh")
-    for script in "${scripts[@]}"; do
-        if [[ -x "$script" ]]; then
-            print_status "success" "$script: EXISTS and EXECUTABLE"
-        else
-            print_status "error" "$script: MISSING or NOT EXECUTABLE"
-            return 1
-        fi
-    done
-    
-    # Check essential files
-    local files=("Containerfile" "renv.lock" ".Rprofile")
-    for file in "${files[@]}"; do
-        if [[ -f "$file" ]]; then
-            print_status "success" "$file: EXISTS"
-        else
-            print_status "error" "$file: MISSING"
-            return 1
-        fi
-    done
-    
-    # Check dependency files
-    local dep_files=("deps/build.txt" "deps/removable.txt" "deps/required.txt" "deps/runtime.txt")
-    for file in "${dep_files[@]}"; do
-        if [[ -f "$file" ]]; then
-            print_status "success" "$file: EXISTS"
-        else
-            print_status "error" "$file: MISSING"
-            return 1
-        fi
-    done
-    
-    return 0
-}
 
-# Function to validate dependencies
-validate_dependencies() {
-    print_status "info" "Validating dependencies..."
-    
-    if [[ -x "deps/validate.sh" ]]; then
-        if ./deps/validate.sh | grep -q "✅ All dependency files are valid!"; then
-            print_status "success" "Dependency validation: PASSED"
-            return 0
-        else
-            print_status "error" "Dependency validation: FAILED"
-            return 1
-        fi
-    else
-        print_status "error" "deps/validate.sh: MISSING or NOT EXECUTABLE"
-        return 1
-    fi
-}
-
-# Function to test dependency loading
-test_dependency_loading() {
-    print_status "info" "Testing dependency loading..."
-    
-    if [[ -f "deps/load.sh" ]]; then
-        # shellcheck source=/dev/null
-        source deps/load.sh
-        
-        if [[ -n "$BUILD_DEPS" && -n "$DEV_LIBS_REMOVABLE" && -n "$DEV_LIBS_REQUIRED" && -n "$RUNTIME_DEPS" ]]; then
-            print_status "success" "Dependency loading: PASSED"
-            return 0
-        else
-            print_status "error" "Dependency loading: FAILED - Some variables are empty"
-            return 1
-        fi
-    else
-        print_status "error" "deps/load.sh: MISSING"
-        return 1
-    fi
-}
 
 # Function to check disk space
 check_disk_space() {
@@ -519,7 +442,7 @@ check_system_requirements() {
     fi
     
     # Check if we're in the right directory
-    if [[ ! -f "Containerfile" ]]; then
+    if [[ ! -f "Dockerfile" ]]; then
         print_status "error" "Not in the correct directory. Please run this script from the project root"
         return 1
     fi
@@ -538,15 +461,15 @@ prompt_build() {
     read -r response
     
     if [[ "$response" =~ ^[Nn]$ ]]; then
-        print_status "info" "Skipping build. You can run './build.sh' manually when ready."
+        print_status "info" "Skipping build. You can run './docker-build.sh' manually when ready."
         return 0
     fi
     
     print_status "info" "Starting build process..."
-    if [[ -x "./build.sh" ]]; then
-        ./build.sh
+    if [[ -x "./docker-build.sh" ]]; then
+        ./docker-build.sh
     else
-        print_status "error" "build.sh is not executable"
+        print_status "error" "docker-build.sh is not executable"
         return 1
     fi
 }
@@ -570,16 +493,15 @@ show_help() {
     echo "Options:"
     echo "  -h, --help     Show this help message"
     echo "  --skip-docker  Skip Docker installation/setup"
-    echo "  --no-build     Don't prompt to run build.sh"
+    echo "  --no-build     Don't prompt to run docker-build.sh"
     echo
     echo "What this script does:"
     echo "  1. Detects your operating system and distribution"
     echo "  2. Checks Docker installation and status"
     echo "  3. Offers to install Docker if missing"
     echo "  4. Helps start Docker daemon if not running (common in WSL)"
-    echo "  5. Validates all project files and dependencies"
-    echo "  6. Checks system requirements"
-    echo "  7. Prompts to run the build script"
+    echo "  5. Checks system requirements"
+    echo "  6. Prompts to run the docker build script"
 }
 
 # Main function
@@ -688,42 +610,20 @@ main() {
         echo
     fi
     
-    # Step 5: Validate project files
-    if ! validate_project_files; then
-        print_status "error" "Project validation failed. Please ensure all required files are present."
-        exit 1
-    fi
-    echo
-    
-    # Step 6: Validate dependencies
-    if ! validate_dependencies; then
-        print_status "error" "Dependency validation failed. Please check your dependency files."
-        exit 1
-    fi
-    echo
-    
-    # Step 7: Test dependency loading
-    if ! test_dependency_loading; then
-        print_status "error" "Dependency loading test failed."
-        exit 1
-    fi
-    echo
-    
-    # Step 8: Prompt for build
+    # Step 5: Prompt for build
     if [[ "$no_build" == false ]]; then
         prompt_build
     else
-        print_status "info" "Setup complete! Run './build.sh' when ready to build the container."
+        print_status "info" "Setup complete! Run './docker-build.sh' when ready to build the container."
     fi
     
     echo
     print_status "success" "Setup script completed successfully!"
     echo
     echo "📚 Quick reference:"
-    echo "  ./build.sh     - Build the container"
-    echo "  ./local.sh     - Run locally built container"
-    echo "  ./hub.sh       - Run from Docker Hub"
-    echo "  ./deps/        - Manage dependencies"
+    echo "  ./docker-build.sh     - Build the container"
+    echo "  ./docker-run-local.sh - Run locally built container"
+    echo "  ./docker-run-hub.sh   - Run from Docker Hub"
     echo
 }
 

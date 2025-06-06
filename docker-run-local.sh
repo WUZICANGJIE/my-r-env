@@ -1,10 +1,7 @@
 #!/bin/bash
-# Build and run script for renv-enabled R container
+# Docker build and run script for locally built R container
 
 set -e
-
-# Enable BuildKit for faster builds
-export DOCKER_BUILDKIT=1
 
 # Configuration
 IMAGE_NAME="my-r-env"
@@ -15,7 +12,7 @@ RENV_CACHE_HOST="$HOME/.cache/R/renv"
 mkdir -p "$RENV_CACHE_HOST"
 
 echo "Building Docker image with renv..."
-docker build -t "$IMAGE_NAME" -f Containerfile .
+docker build -t "$IMAGE_NAME" -f Dockerfile .
 
 # Remove existing container if it exists
 if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then

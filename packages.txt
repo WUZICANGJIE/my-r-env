@@ -1,0 +1,40 @@
+# All System Dependencies
+# Consolidated from runtime.txt, build.txt, required.txt, and removable.txt
+# This file contains all apt packages needed for the R development environment
+
+# === Runtime Dependencies ===
+# These are needed for normal operation of the container
+ca-certificates
+curl
+wget
+git
+pandoc
+unzip
+
+# === Build-time Dependencies ===
+# Tools needed for building and compiling
+software-properties-common
+gnupg
+dirmngr
+make
+cmake
+
+# === Development Libraries (Required) ===
+# Libraries that R actually requires - must be kept
+libpng-dev
+libjpeg-dev
+
+# === Development Libraries (Additional) ===
+# Additional dev libraries for R packages and functionality
+libssl-dev
+libcurl4-openssl-dev
+libxml2-dev
+libfontconfig1-dev
+libfreetype6-dev
+libharfbuzz-dev
+libfribidi-dev
+libtiff5-dev
+libmagick++-dev
+gsfonts
+libgit2-dev
+libnode-dev

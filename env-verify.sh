@@ -1,11 +1,20 @@
 #!/bin/bash
-# Verification script for R development environment container
+# Environment verification script for R development environment container
 # This script checks all components that remain after the cleanup process
+# Usage: ./env-verify.sh [startup|push]
 
 SCRIPT_NAME="R Environment Verification"
 LOG_DIR="/project/logs"
 LOG_FILE="$LOG_DIR/verification.log"
 SUMMARY_FILE="$LOG_DIR/verification_summary.log"
+
+# Post-verification action parameter
+POST_ACTION="$1"
+
+# Configuration (should match docker-build.sh)
+IMAGE_NAME="my-r-env"
+CONTAINER_NAME="r-dev"
+RENV_CACHE_HOST="$HOME/.cache/R/renv"
 
 # Colors for output
 RED='\033[0;31m'
@@ -193,20 +202,60 @@ EOF
         echo "Overall status: $FAILED_CHECKS CHECK(S) FAILED ✗" >> "$SUMMARY_FILE"
         log_message "FAIL" "$FAILED_CHECKS verification check(s) failed!"
     fi
-    
-    cat >> "$SUMMARY_FILE" << EOF
+     cat >> "$SUMMARY_FILE" << EOF
 
 Detailed log: $LOG_FILE
 EOF
-    
+
     # Display summary
     echo ""
     echo "=== VERIFICATION SUMMARY ==="
     cat "$SUMMARY_FILE"
 }
 
+handle_post_verification_action() {
+    if [ $FAILED_CHECKS -ne 0 ]; then
+        log_message "FAIL" "Skipping post-verification action due to failed checks"
+        return 1
+    fi
+    
+    case "$POST_ACTION" in
+        "startup")
+            log_message "INFO" "Post-verification action: Starting container..."
+            echo ""
+            echo "🚀 Starting interactive R development container..."
+            ./docker-run-local.sh
+            ;;
+        "push")
+            log_message "INFO" "Post-verification action: Pushing to Docker Hub then starting container..."
+            echo ""
+            echo "📤 Pushing image to Docker Hub..."
+            ./docker-push.sh
+            if [ $? -eq 0 ]; then
+                echo ""
+                echo "🚀 Starting interactive R development container..."
+                ./docker-run-local.sh
+            else
+                log_message "FAIL" "Docker Hub push failed, skipping container startup"
+                return 1
+            fi
+            ;;
+        "")
+            log_message "INFO" "No post-verification action specified"
+            ;;
+        *)
+            log_message "WARN" "Unknown post-verification action: $POST_ACTION"
+            ;;
+    esac
+}
+
 main() {
     echo "Starting $SCRIPT_NAME..."
+    
+    # Show post-verification action if specified
+    if [ -n "$POST_ACTION" ]; then
+        log_message "INFO" "Post-verification action: $POST_ACTION"
+    fi
     
     # Create log directory
     mkdir -p "$LOG_DIR"
@@ -275,9 +324,16 @@ EOF
     
     log_message "INFO" "Verification completed at: $(date)"
     
-    # Return appropriate exit code
+    # Handle post-verification actions if verification passed
     if [ $FAILED_CHECKS -eq 0 ]; then
-        return 0
+        if [ -n "$POST_ACTION" ]; then
+            echo ""
+            log_message "INFO" "=== Post-Verification Action ==="
+            handle_post_verification_action
+            return $?
+        else
+            return 0
+        fi
     else
         return 1
     fi

@@ -17,37 +17,38 @@ A modern, containerized R development environment featuring reproducible package
 
 ```bash
 # 1. First-time setup (validates system and installs Docker if needed)
-./test.sh
+./env-setup.sh
 
 # 2. Build the container locally
-./build.sh
+./docker-build.sh
 
 # 3. Run the container for development
-./local.sh
+./docker-run-local.sh
 
 # Or pull from Docker Hub (if available)
-./hub.sh
+./docker-run-hub.sh
 ```
 
 ### Cross-Platform Setup
 
-The `test.sh` script automatically handles setup for:
+The `env-setup.sh` script automatically handles setup for:
 - **Linux**: Debian/Ubuntu, Arch, Fedora/RHEL/CentOS
 - **macOS**: With Homebrew or Docker Desktop
 - **Windows**: WSL (Windows Subsystem for Linux)
 
-**First time?** Just run `./test.sh` and follow the prompts!
+**First time?** Just run `./env-setup.sh` and follow the prompts!
 
 ## 📁 Project Structure
 
 ```
 my-r-env/
 ├── 🐳 Container Configuration
-│   ├── Containerfile          # Optimized Docker build configuration
-│   ├── build.sh              # Build script with Docker Hub integration
-│   ├── local.sh              # Local development runner
-│   ├── hub.sh                # Docker Hub runner
-│   └── test.sh               # Container testing script
+│   ├── Dockerfile            # Optimized Docker build configuration
+│   ├── docker-build.sh      # Build script with Docker Hub integration
+│   ├── docker-run-local.sh  # Local development runner
+│   ├── docker-run-hub.sh    # Docker Hub runner
+│   ├── env-setup.sh         # Environment setup and validation
+│   └── env-verify.sh        # Container verification script
 │
 ├── 📦 Dependency Management
 │   └── deps/                 # Centralized system dependency definitions
@@ -83,14 +84,14 @@ my-r-env/
 
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `test.sh` | **Cross-platform setup & validation** | `./test.sh` |
-| `build.sh` | Build container with Docker Hub integration | `./build.sh` |
-| `local.sh` | Run container locally with cache mounts | `./local.sh` |
-| `hub.sh` | Pull and run from Docker Hub | `./hub.sh` |
-| `debug.sh` | Debug system dependencies | `./debug.sh` |
+| `env-setup.sh` | **Cross-platform setup & validation** | `./env-setup.sh` |
+| `docker-build.sh` | Build container with Docker Hub integration | `./docker-build.sh` |
+| `docker-run-local.sh` | Run container locally with cache mounts | `./docker-run-local.sh` |
+| `docker-run-hub.sh` | Pull and run from Docker Hub | `./docker-run-hub.sh` |
+| `env-verify.sh` | Verify container environment | `./env-verify.sh` |
 
 #### Setup Script Features
-The `test.sh` script provides comprehensive environment validation:
+The `env-setup.sh` script provides comprehensive environment validation:
 - **OS Detection**: Automatically detects Linux distributions, macOS, and WSL
 - **Docker Management**: Installs and configures Docker if missing
 - **System Validation**: Checks disk space, memory, and dependencies
