@@ -1,6 +1,10 @@
 #!/bin/bash
 # Pre-install VS Code extensions during Docker build
 
+# Get the user name from environment variable (defaults to wuzi)
+USER_NAME="${USER_NAME:-wuzi}"
+USER_HOME="/home/${USER_NAME}"
+
 # List of extensions to install
 EXTENSIONS=(
     "george-alisson.html-preview-vscode"
@@ -37,7 +41,7 @@ EXTENSIONS=(
 echo "Installing VS Code extensions..."
 for extension in "${EXTENSIONS[@]}"; do
     echo "Installing $extension..."
-    code --install-extension "$extension" --force
+    code --install-extension "$extension" --force --user-data-dir "${USER_HOME}/.vscode-server"
 done
 
 echo "All extensions installed successfully!"

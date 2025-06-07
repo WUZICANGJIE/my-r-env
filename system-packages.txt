@@ -11,6 +11,12 @@ pandoc
 unzip
 locales
 locales-all
+gpg
+
+# === Personal Tools ===
+# Convenience tools for personal preference
+nano
+htop
 
 # === Build-time Dependencies ===
 # Tools needed for building and compiling
@@ -19,6 +25,26 @@ gnupg
 dirmngr
 make
 cmake
+
+# === Python Dependencies ===
+# Python and related packages for radian
+python3
+python3-pip
+
+# === VS Code Dependencies ===
+# Required for VS Code installation
+apt-transport-https
+
+# === LaTeX Dependencies ===
+# Full LaTeX installation for RMarkdown PDF generation
+texlive-base
+texlive-latex-recommended
+texlive-fonts-recommended
+texlive-latex-extra
+lmodern
+texlive-lang-chinese
+texlive-lang-japanese
+latexmk
 
 # === Development Libraries (Required) ===
 # Libraries that R actually requires - must be kept

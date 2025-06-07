@@ -14,18 +14,23 @@ ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 
+# User configuration
+ENV USER_NAME=wuzi
+
 # --- 1. Copy dependency definitions ---
 COPY system-packages.txt /tmp/system-packages.txt
 
-# --- 2. Install system dependencies ---
-RUN rm -f /etc/apt/apt.conf.d/docker-clean && \
+# --- 2. Install system packages ---
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean && \
     mkdir -p $PIP_CACHE_DIR $RENV_PATHS_CACHE && \
-    # Install all dependencies from system-packages.txt
+    # Install all packages from system-packages.txt
     apt-get update -qq && \
     grep -v '^#' /tmp/system-packages.txt | grep -v '^$' | xargs apt-get install -y --no-install-recommends && \
-    rm -rf /var/lib/apt/lists/* /tmp/system-packages.txt
+    rm -f /tmp/system-packages.txt
 
-# --- 2.1. Configure locales ---
+# --- 3. Configure locales ---
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && \
     sed -i '/ja_JP.UTF-8/s/^# //g' /etc/locale.gen && \
     sed -i '/zh_CN.UTF-8/s/^# //g' /etc/locale.gen && \
@@ -33,65 +38,76 @@ RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && \
     locale-gen && \
     update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
-# --- 3. Install R from CRAN ---
-RUN wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc && \
+# --- 4. Install R from CRAN ---
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc && \
     gpg --show-keys /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc && \
     add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" && \
     apt-get update -qq && apt-get install -y --no-install-recommends \
     r-base=4.5.* \
-    r-base-dev=4.5.* \
-    && rm -rf /var/lib/apt/lists/*
+    r-base-dev=4.5.*
 
-# --- 4. Install Fish Shell ---
-RUN add-apt-repository ppa:fish-shell/release-4 -y && \
+# --- 5. Install Fish Shell ---
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    add-apt-repository ppa:fish-shell/release-4 -y && \
     apt-get update -qq && apt-get install -y --no-install-recommends \
-    fish \
-    && rm -rf /var/lib/apt/lists/*
+    fish
 
-# --- 5. Install Python and radian ---
+# --- 6. Create non-root user ---
+RUN groupadd --gid 1000 ${USER_NAME} && \
+    useradd --uid 1000 --gid ${USER_NAME} --shell /usr/bin/fish --create-home ${USER_NAME} && \
+    usermod -aG sudo ${USER_NAME} && \
+    echo "${USER_NAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# --- 7. Install Python packages ---
 RUN --mount=type=cache,target=/var/cache/buildkit/pip \
-    apt-get update -qq && apt-get install -y --no-install-recommends \
-    python3 \
-    python3-pip \
-    && rm -rf /var/lib/apt/lists/* && \
     pip3 install --break-system-packages radian
 
-# --- 6. Install Starship prompt ---
+# --- 8. Install Starship prompt ---
 RUN curl -sS https://starship.rs/install.sh | sh -s -- --yes
 
-# --- 7. Install LaTeX ---
-RUN apt-get update -qq && apt-get install -y --no-install-recommends \
-    texlive-base \
-    texlive-latex-recommended \
-    texlive-fonts-recommended \
-    texlive-latex-extra \
-    lmodern \
-    texlive-lang-chinese \
-    texlive-lang-japanese \
-    latexmk \
-    && rm -rf /var/lib/apt/lists/*
+# --- 9. Install VS Code (multiarch compatible) ---
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg && \
+    install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg && \
+    echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | tee /etc/apt/sources.list.d/vscode.list > /dev/null && \
+    rm -f packages.microsoft.gpg && \
+    apt-get update -qq && apt-get install -y --no-install-recommends \
+    code
 
-# --- 8. Install renv and setup R packages ---
+# --- 10. Setup R environment ---
 RUN R -e "install.packages('renv', repos = c(CRAN = 'https://cloud.r-project.org'))"
 
-WORKDIR /project
+# Switch to non-root user
+USER ${USER_NAME}
+WORKDIR /home/${USER_NAME}/project
 
-COPY renv.lock renv.lock
-COPY .Rprofile .Rprofile
-COPY renv/activate.R renv/activate.R
-COPY renv/settings.json renv/settings.json
-COPY init_renv.R init_renv.R
+COPY --chown=${USER_NAME}:${USER_NAME} renv.lock renv.lock
+COPY --chown=${USER_NAME}:${USER_NAME} .Rprofile .Rprofile
+COPY --chown=${USER_NAME}:${USER_NAME} renv/activate.R renv/activate.R
+COPY --chown=${USER_NAME}:${USER_NAME} renv/settings.json renv/settings.json
+COPY --chown=${USER_NAME}:${USER_NAME} init_renv.R init_renv.R
 
 RUN --mount=type=cache,target=${RENV_PATHS_CACHE} \
     R -e "renv::restore()"
 
-# --- 9. Configure Starship prompt and Fish shell ---
-COPY config.fish /tmp/config.fish
-RUN mkdir -p /root/.config && \
-    starship preset no-nerd-font -o /root/.config/starship.toml && \
-    mkdir -p /root/.config/fish && \
-    cp /tmp/config.fish /root/.config/fish/config.fish && \
+# --- 11. Configure Starship prompt and Fish shell ---
+COPY --chown=${USER_NAME}:${USER_NAME} config.fish /tmp/config.fish
+RUN mkdir -p /home/${USER_NAME}/.config && \
+    starship preset no-nerd-font -o /home/${USER_NAME}/.config/starship.toml && \
+    mkdir -p /home/${USER_NAME}/.config/fish && \
+    cp /tmp/config.fish /home/${USER_NAME}/.config/fish/config.fish && \
     rm /tmp/config.fish
 
-# --- 10. Start the shell ---
+# --- 12. Install VS Code extensions ---
+COPY --chown=${USER_NAME}:${USER_NAME} install-extensions.sh /tmp/install-extensions.sh
+RUN chmod +x /tmp/install-extensions.sh && \
+    mkdir -p /home/${USER_NAME}/.vscode-server/extensions && \
+    bash -c '/tmp/install-extensions.sh' && \
+    rm /tmp/install-extensions.sh
+
+# --- 13. Start the shell ---
 CMD ["fish"]

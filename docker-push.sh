@@ -18,20 +18,13 @@ if ! docker image inspect "$IMAGE_NAME" >/dev/null 2>&1; then
 fi
 
 echo "================================================="
-echo "🚀 Docker Hub Upload Script"
+echo "🚀 Docker Hub Upload"
 echo "================================================="
 echo "Local image: $IMAGE_NAME"
 echo "Docker Hub target: $FULL_DOCKERHUB_NAME"
 echo ""
 
-# Confirm upload
-read -p "Do you want to push the image to Docker Hub? (y/N) " -n 1 -r choice
-echo ""
-
-if [[ ! $choice =~ ^[Yy]$ ]]; then
-    echo ">>> Upload cancelled by user."
-    exit 0
-fi
+echo ">>> Starting automatic push to Docker Hub..."
 
 echo ">>> Determining host architecture for tagging..."
 HOST_ARCH=$(docker system info --format '{{.Architecture}}')

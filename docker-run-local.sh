@@ -7,6 +7,7 @@ set -e
 IMAGE_NAME="my-r-env"
 CONTAINER_NAME="r-dev"
 RENV_CACHE_HOST="$HOME/.cache/R/renv"
+USER_NAME="${USER_NAME:-wuzi}"  # Default to wuzi if not set
 
 # Create cache directory if it doesn't exist
 mkdir -p "$RENV_CACHE_HOST"
@@ -24,7 +25,8 @@ echo "Running container with renv cache mounted..."
 docker run -it --rm \
     --name "$CONTAINER_NAME" \
     -e "RENV_PATHS_CACHE=/renv/cache" \
+    -e "USER_NAME=${USER_NAME}" \
     -v "$RENV_CACHE_HOST:/renv/cache" \
-    -v "$(pwd):/project" \
-    -w /project \
+    -v "$(pwd):/home/${USER_NAME}/project" \
+    -w "/home/${USER_NAME}/project" \
     "$IMAGE_NAME"
