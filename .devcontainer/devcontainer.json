@@ -1,59 +1,11 @@
 {
   "name": "R",
-  // Use the same image as in your Docker script
-  "image": "docker.io/wuzicangjie/my-r-env:latest",
-  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-  "mounts": [
-    // Mount renv cache for package management (persistent across rebuilds)
-    // Use bind mount to user home cache directory for better persistence in WSL/Unix
-    "source=${localEnv:HOME}/.cache/R/renv,target=/renv/cache,type=bind"
-  ],
-  "containerEnv": {
-    // Set renv cache path to match your Docker script
-    "RENV_PATHS_CACHE": "/renv/cache"
-  },
-  "features": {
-    "ghcr.io/devcontainers/features/docker-from-docker:1": {
-      "version": "latest",
-      "enableNonRootDocker": "true"
-    }
-  },
-  "runArgs": ["--name", "r-env-vscode"],
+  // Use docker-compose.yml for container configuration
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "r_env",
+  "workspaceFolder": "/workspaces/workspace",
+  // Configure container user
+  "remoteUser": "wuzi"
   // Add any other customizations you need below
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "george-alisson.html-preview-vscode",
-        "github.copilot",
-        "github.copilot-chat",
-        "github.remotehub",
-        "grapecity.gc-excelviewer",
-        "mechatroner.rainbow-csv",
-        "ms-azuretools.vscode-containers",
-        "ms-azuretools.vscode-docker",
-        "ms-python.debugpy",
-        "ms-python.python",
-        "ms-python.vscode-pylance",
-        "ms-toolsai.datawrangler",
-        "ms-toolsai.jupyter",
-        "ms-toolsai.jupyter-keymap",
-        "ms-toolsai.vscode-jupyter-cell-tags",
-        "ms-vscode-remote.remote-containers",
-        "ms-vscode-remote.remote-ssh",
-        "ms-vscode-remote.remote-ssh-edit",
-        "ms-vscode-remote.remote-wsl",
-        "ms-vscode-remote.vscode-remote-extensionpack",
-        "ms-vscode.azure-repos",
-        "ms-vscode.powershell",
-        "ms-vscode.remote-explorer",
-        "ms-vscode.remote-repositories",
-        "ms-vscode.remote-server",
-        "rdebugger.r-debugger",
-        "reditorsupport.r",
-        "reditorsupport.r-syntax",
-        "yzhang.markdown-all-in-one"
-      ]
-    }
-  }
   // "forwardPorts": [],
 }
