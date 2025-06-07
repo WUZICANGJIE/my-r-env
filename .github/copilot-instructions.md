@@ -10,9 +10,6 @@
 
 ## Project Context
 
-This is an R development environment project using Docker containers with:
-- R with renv for package management
-- Fish shell with Starship prompt
-- Python + radian for enhanced R console
-- LaTeX for RMarkdown PDF output
-- Centralized dependency management system
+- Reference README.md for project overview.
+- After you make changes, always update the README.md to reflect the current state of the project.
+- Instead of deleting files, move them to the `.archive` directory.
