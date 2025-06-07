@@ -1,5 +1,7 @@
 # R Development Environment with Docker
 
+> ⚠️ **DISCLAIMER**: This project is currently very buggy and is intended for my personal use only. 
+
 A modern, containerized R development environment featuring reproducible package management, optimized builds, and enhanced developer experience. Designed for data scientists, statisticians, and R developers who need a consistent, portable, and fully-featured development environment.
 
 ## ✨ Features
@@ -501,35 +503,5 @@ docker system prune -a  # WARNING: Removes all Docker cache
 | `system-packages.txt` | System dependencies | One package per line, comments with # |
 | `config.fish` | Fish shell configuration | Includes renv activation and Starship |
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Make changes and test with `./docker-build.sh`
-3. Test in VS Code dev container: `code . && "Reopen in Container"`
-4. Update documentation if needed
-5. Submit a pull request
-
-### Development Guidelines
-
-- **System packages**: Add to `system-packages.txt`
-- **R packages**: Use `renv::install()` and `renv::snapshot()`
-- **VS Code extensions**: Add to `install-extensions.sh`
-- **Shell configuration**: Modify `config.fish`
-- **Docker optimizations**: Consider build cache implications
 
 ---
-
-**Ready to develop?** 
-
-**For VS Code users (recommended):**
-```bash
-code /home/wuzi/Documents/Scripts/my-r-env
-# Click "Reopen in Container" when prompted
-```
-
-**For standalone development:**
-```bash
-./docker-build.sh && ./docker-run-local.sh
-```
-
-🎉 **Happy coding with your reproducible R environment!**
