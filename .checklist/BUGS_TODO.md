@@ -54,4 +54,7 @@
 
 ---
 
+sudo apt install gsfonts libnode-dev
+
+
 **Last Updated**: June 6, 2025

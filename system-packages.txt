@@ -1,5 +1,4 @@
 # All System Dependencies
-# Consolidated from runtime.txt, build.txt, required.txt, and removable.txt
 # This file contains all apt packages needed for the R development environment
 
 # === Runtime Dependencies ===
@@ -10,6 +9,8 @@ wget
 git
 pandoc
 unzip
+locales
+locales-all
 
 # === Build-time Dependencies ===
 # Tools needed for building and compiling

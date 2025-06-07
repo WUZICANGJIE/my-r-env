@@ -5,7 +5,7 @@ set -e
 
 # Configuration (should match docker-build.sh)
 IMAGE_NAME="my-r-env"
-DOCKERHUB_USERNAME="wuzicangjie"  # Change this to your Docker Hub username
+DOCKERHUB_USERNAME="wuzicangjie"
 DOCKERHUB_IMAGE_NAME="${DOCKERHUB_USERNAME}/my-r-env"
 IMAGE_TAG="latest"
 FULL_DOCKERHUB_NAME="${DOCKERHUB_IMAGE_NAME}:${IMAGE_TAG}"

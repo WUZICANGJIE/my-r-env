@@ -1,0 +1,58 @@
+{
+  "name": "My R Environment",
+  // Use the same image as in your Docker script
+  "image": "docker.io/wuzicangjie/my-r-env:latest",
+  "workspaceFolder": "/project",
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+    // Mount renv cache for package management
+    "source=${localEnv:HOME}/.cache/R/renv,target=/renv/cache,type=bind",
+    // Mount the workspace directory to /project in container
+    "source=${localWorkspaceFolder},target=/project,type=bind"
+  ],
+  "containerEnv": {
+    // Set renv cache path to match your Docker script
+    "RENV_PATHS_CACHE": "/renv/cache"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-from-docker:1": {}
+  },
+  // Add any other customizations you need below
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "george-alisson.html-preview-vscode",
+        "github.copilot",
+        "github.copilot-chat",
+        "github.remotehub",
+        "grapecity.gc-excelviewer",
+        "mechatroner.rainbow-csv",
+        "ms-azuretools.vscode-containers",
+        "ms-azuretools.vscode-docker",
+        "ms-python.debugpy",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-toolsai.datawrangler",
+        "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-keymap",
+        "ms-toolsai.vscode-jupyter-cell-tags",
+        "ms-vscode-remote.remote-containers",
+        "ms-vscode-remote.remote-ssh",
+        "ms-vscode-remote.remote-ssh-edit",
+        "ms-vscode-remote.remote-wsl",
+        "ms-vscode-remote.vscode-remote-extensionpack",
+        "ms-vscode.azure-repos",
+        "ms-vscode.powershell",
+        "ms-vscode.remote-explorer",
+        "ms-vscode.remote-repositories",
+        "ms-vscode.remote-server",
+        "rdebugger.r-debugger",
+        "reditorsupport.r",
+        "reditorsupport.r-syntax",
+        "yzhang.markdown-all-in-one"
+      ]
+    }
+  },
+  "postCreateCommand": "mkdir -p /renv/cache"
+  // "forwardPorts": [],
+}

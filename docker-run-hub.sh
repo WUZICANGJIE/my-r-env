@@ -3,6 +3,7 @@
 
 set -e
 
+# Configuration
 DOCKERHUB_USERNAME="wuzicangjie"
 IMAGE_NAME="${DOCKERHUB_USERNAME}/my-r-env:latest"
 CONTAINER_NAME="r-dev"

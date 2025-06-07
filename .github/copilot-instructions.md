@@ -2,7 +2,7 @@
 
 ## Shell Environment
 
-**Important**: The user may be using fish shell as their default shell. When generating terminal commands, do not assume bash compatibility.
+**Important**: The user may be using fish shell as their default shell. When generating terminal commands, use `bash -c 'your_bash_command'` to ensure compatibility with the fish shell environment.
 
 ## Planning and Task Management
 
