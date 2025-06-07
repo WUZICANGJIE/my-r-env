@@ -1,19 +1,35 @@
 # R Development Environment with Docker
 
-A modern, containerized R development environment featuring reproducible package management, optimized builds, and enhanced developer experience.
+A modern, containerized R development environment featuring reproducible package management, optimized builds, and enhanced developer experience. Designed for data scientists, statisticians, and R developers who need a consistent, portable, and fully-featured development environment.
 
 ## ✨ Features
 
-- **R 4.5.0** with comprehensive package ecosystem
-- **renv** for reproducible package management
+- **R 4.5.0** with comprehensive package ecosystem (270+ packages)
+- **renv** for reproducible package management with persistent caching
 - **Fish shell** with Starship prompt for modern terminal experience
-- **Python + radian** for enhanced R console
+- **Python + radian** for enhanced R console with syntax highlighting
 - **LaTeX** support for RMarkdown PDF output
-- **Docker BuildKit** optimizations for fast rebuilds
+- **VS Code integration** with pre-installed extensions
+- **Docker BuildKit** optimizations for 75-80% faster rebuilds
 - **Multi-architecture support** (amd64/arm64)
+- **Docker Compose** support for seamless VS Code development
 - **Centralized dependency management** system
 
 ## 🚀 Quick Start
+
+### Option 1: VS Code Development Container (Recommended)
+
+```bash
+# 1. Clone and open in VS Code
+git clone <repository-url>
+cd my-r-env
+code .
+
+# 2. When prompted, click "Reopen in Container"
+# Or use Command Palette: "Dev Containers: Reopen in Container"
+```
+
+### Option 2: Standalone Container
 
 ```bash
 # 1. First-time setup (validates system and installs Docker if needed)
@@ -27,6 +43,16 @@ A modern, containerized R development environment featuring reproducible package
 
 # Or pull from Docker Hub (if available)
 ./docker-run-hub.sh
+```
+
+### Option 3: Docker Compose
+
+```bash
+# Start the environment
+docker-compose up -d
+
+# Attach to the container
+docker exec -it r-env-vscode fish
 ```
 
 ### Cross-Platform Setup
@@ -43,26 +69,39 @@ The `env-setup.sh` script automatically handles setup for:
 ```
 my-r-env/
 ├── 🐳 Container Configuration
-│   ├── Dockerfile            # Optimized Docker build configuration
-│   ├── docker-build.sh      # Build script with Docker Hub integration
-│   ├── docker-run-local.sh  # Local development runner
-│   ├── docker-run-hub.sh    # Docker Hub runner
-│   ├── env-setup.sh         # Environment setup and validation
-│   └── env-verify.sh        # Container verification script
+│   ├── Dockerfile              # Multi-stage optimized Docker build
+│   ├── docker-compose.yml      # VS Code development container setup
+│   ├── docker-build.sh         # Build script with Docker Hub integration
+│   ├── docker-run-local.sh     # Local development runner
+│   ├── docker-run-hub.sh       # Docker Hub runner
+│   ├── docker-push.sh          # Docker Hub publishing script
+│   └── env-setup.sh            # Cross-platform setup and validation
 │
 ├── 📦 Dependency Management
-│   └── system-packages.txt          # System dependencies (apt packages)
+│   ├── system-packages.txt     # System dependencies (apt packages)
+│   ├── renv.lock              # R package lockfile (270+ packages)
+│   └── renv/                  # renv configuration and cache
+│       ├── activate.R         # renv activation script
+│       ├── settings.json      # renv settings
+│       └── library/           # Installed R packages
 │
-├── 🔧 R Environment
-│   ├── .Rprofile             # R startup configuration
-│   ├── renv.lock             # Package lockfile
-│   ├── renv/                 # renv configuration
-│   │   ├── activate.R        # renv activation script
-│   │   └── settings.json     # renv settings
-│   └── init_renv.R           # Package initialization script
+├── 🔧 Development Environment
+│   ├── .devcontainer/         # VS Code dev container configuration
+│   │   └── devcontainer.json  # Dev container settings
+│   ├── .Rprofile              # R startup configuration
+│   ├── config.fish            # Fish shell configuration
+│   ├── install-extensions.sh  # VS Code extensions installer
+│   └── init_renv.R            # R package initialization script
 │
-└── 🗄️ Backup & Archive
-    └── .backup/              # Legacy files and backups
+├── 📊 Logs & Monitoring
+│   └── logs/                  # Build and verification logs
+│       ├── verification.log   # Container verification results
+│       └── verification_summary.log
+│
+└── 📋 Project Management
+    ├── .checklist/            # Project tracking and TODO items
+    ├── .github/               # GitHub Actions and templates
+    └── LICENSE                # MIT License
 ```
 
 ## 🔧 Scripts Overview
@@ -75,7 +114,18 @@ my-r-env/
 | `docker-build.sh` | Build container with Docker Hub integration | `./docker-build.sh` |
 | `docker-run-local.sh` | Run container locally with cache mounts | `./docker-run-local.sh` |
 | `docker-run-hub.sh` | Pull and run from Docker Hub | `./docker-run-hub.sh` |
-| `env-verify.sh` | Verify container environment | `./env-verify.sh` |
+| `docker-push.sh` | Push built image to Docker Hub | `./docker-push.sh` |
+| `docker-compose.yml` | **VS Code dev container configuration** | `docker-compose up -d` |
+
+#### VS Code Development Container
+
+The project includes full VS Code development container support:
+
+- **devcontainer.json**: Configures VS Code to use the Docker Compose setup
+- **Automatic setup**: Opens directly in containerized environment
+- **Extension management**: Pre-installs 30+ extensions for R, Python, and data science
+- **Volume persistence**: Maintains R package cache and project files
+- **Docker-in-Docker**: Enables running Docker commands from within the container
 
 #### Setup Script Features
 The `env-setup.sh` script provides comprehensive environment validation:
@@ -90,21 +140,32 @@ The `env-setup.sh` script provides comprehensive environment validation:
 | File | Purpose | Usage |
 |------|---------|-------|
 | `system-packages.txt` | System dependencies (apt packages) | Edit directly, then rebuild |
+| `renv.lock` | **R package lockfile (270+ packages)** | Managed by renv |
+| `install-extensions.sh` | VS Code extensions installer | Runs during Docker build |
 
 ## 🐳 Container Features
 
 ### Build Optimizations
-- **BuildKit cache mounts** for faster rebuilds
-- **Multi-stage dependency management** 
-- **Selective cleanup** of build dependencies
-- **renv cache persistence** across container rebuilds
+- **BuildKit cache mounts** for faster rebuilds (75-80% improvement)
+- **Multi-stage dependency management** with selective cleanup
+- **Persistent renv cache** across container rebuilds
+- **Layered package installation** for optimal Docker layer caching
+- **Architecture-aware builds** (amd64/arm64)
 
 ### Runtime Environment
-- **Fish shell** with custom configuration
-- **Starship prompt** with no-nerd-font preset
-- **radian** for enhanced R console experience
-- **LaTeX** for document generation
-- **Volume mounts** for project persistence
+- **Fish shell** with custom configuration and Starship prompt
+- **radian** for enhanced R console with syntax highlighting and completion
+- **VS Code Server** with 30+ pre-installed extensions
+- **LaTeX** for RMarkdown PDF generation
+- **Docker-in-Docker** capability for containerized workflows
+- **Volume mounts** for project and cache persistence
+
+### VS Code Integration
+- **Development Container**: Full VS Code development environment
+- **Extension Management**: Automatic installation of R, Python, and data science extensions
+- **Integrated Terminal**: Fish shell with enhanced R console (radian)
+- **IntelliSense**: Advanced R language server and Python support
+- **Git Integration**: Built-in Git support with GitHub integration
 
 ### Architecture Support
 - **Multi-architecture builds** (amd64/arm64)
@@ -113,43 +174,89 @@ The `env-setup.sh` script provides comprehensive environment validation:
 
 ## 📦 Package Management
 
-### Current R Packages
-The environment includes a curated set of R packages managed through renv:
+### Current R Packages (270+ installed)
+The environment includes a comprehensive, production-ready set of R packages managed through renv:
 
-**Core Development:**
-- tidyverse, devtools, rmarkdown, shiny
-- data.table, ggplot2, languageserver
+**Core Development & IDE:**
+- tidyverse, devtools, rmarkdown, shiny, languageserver
+- data.table, ggplot2, dplyr, httpgd (for VS Code plotting)
 
-**Data Analysis:**
-- psych, broom, forecast, car
-- modelsummary, lmtest, zoo, moments
+**Statistical Analysis:**
+- psych, broom, forecast, car, lmtest, zoo, moments
+- estimatr, bayestestR, insight, datawizard
 
 **Data Import/Export:**
-- readxl, countrycode, comtradr
-- rsdmx, quantmod, wbstats
+- readxl, haven, DBI, dbplyr, googledrive, googlesheets4
+- countrycode, comtradr, rsdmx, quantmod, wbstats
 
 **Visualization & Tables:**
-- gt, kableExtra, coefplot, stargazer
+- gt, kableExtra, coefplot, stargazer, cowplot
+- htmlwidgets, dygraphs, crosstalk
 
-**Statistical Methods:**
-- estimatr, optionstrat, fUnitRoots, strucchange
+**Advanced Methods:**
+- optionstrat, fUnitRoots, strucchange, fBasics
+- GPArotation, experimentdatar
+
+**Development Tools:**
+- testthat, roxygen2, pkgdown, usethis, gitcreds
+- lintr, styler, profvis, bench
 
 ### Adding Packages
 
+#### In VS Code Development Container
+```r
+# Open R console in VS Code terminal or use Jupyter notebooks
+renv::install("package_name")    # Install from CRAN
+renv::install("user/repo")       # Install from GitHub
+renv::snapshot()                 # Update lockfile
+```
+
+#### In Standalone Container
 ```r
 # Inside the container
 renv::install("package_name")    # Install from CRAN
 renv::install("user/repo")       # Install from GitHub
 renv::snapshot()                 # Update lockfile
 
-# Rebuild container to persist
+# Exit and rebuild container to persist
 exit
 ./docker-build.sh
 ```
 
+### Package Cache System
+- **Host cache**: `~/.cache/R/renv` → `/renv/cache` (persistent across rebuilds)
+- **Container cache**: Optimized with Docker BuildKit cache mounts
+- **renv library**: `renv/library/` (version-specific installations)
+
 ## 🔄 Development Workflow
 
-### Basic Development Cycle
+### VS Code Development Container (Recommended)
+
+```bash
+# 1. Open project in VS Code
+code /home/wuzi/Documents/Scripts/my-r-env
+
+# 2. When prompted, select "Reopen in Container"
+# Or use Command Palette (Ctrl+Shift+P): "Dev Containers: Reopen in Container"
+
+# 3. VS Code will automatically:
+#    - Build the container (if needed)
+#    - Install extensions
+#    - Set up the development environment
+#    - Open integrated terminal with Fish shell
+
+# 4. Start working with R
+# Option A: Use R in the integrated terminal
+R  # or radian for enhanced console
+
+# Option B: Use Jupyter notebooks
+# Create new .ipynb file and select R kernel
+
+# Option C: Use R Markdown
+# Create .Rmd files with full rendering support
+```
+
+### Standalone Development Cycle
 
 ```bash
 # 1. Start development environment
@@ -167,6 +274,22 @@ exit
 ./docker-build.sh  # Only if packages were added/updated
 ```
 
+### Docker Compose Workflow
+
+```bash
+# 1. Start the environment
+docker-compose up -d
+
+# 2. Attach to the container
+docker exec -it r-env-vscode fish
+
+# 3. Work with R
+radian  # Enhanced R console
+
+# 4. Stop when done
+docker-compose down
+```
+
 ### Team Collaboration
 
 ```bash
@@ -181,26 +304,34 @@ exit
 ## ⚡ Performance Features
 
 ### Build Speed Optimizations
-- **75-80% faster** rebuilds when no changes
+- **75-80% faster** rebuilds when no changes detected
 - **50% faster** when only renv.lock changes
-- **BuildKit cache mounts** for all package managers
+- **BuildKit cache mounts** for all package managers (APT, pip, renv)
+- **Multi-stage builds** with intelligent layer caching
+- **Parallel package installation** where possible
 
 ### Cache Strategy
 ```dockerfile
-# APT package cache
+# APT package cache (system packages)
 RUN --mount=type=cache,target=/var/cache/apt
 
-# Python pip cache
+# Python pip cache (radian and dependencies)
 RUN --mount=type=cache,target=/var/cache/buildkit/pip
 
-# renv package cache
+# renv package cache (R packages)
 RUN --mount=type=cache,target=/renv/cache
 ```
 
 ### Host Cache Locations
 - **renv packages**: `~/.cache/R/renv` → `/renv/cache`
+- **Docker BuildKit**: Automatic cache management
 - **Build persistence** across container rebuilds
-- **Shared cache** across different projects
+- **Shared cache** across different projects using the same base image
+
+### Container Optimization
+- **Multi-architecture support**: Single command works on Intel and ARM
+- **Minimal runtime**: Debug dependencies removed in production builds
+- **Layer optimization**: Frequently changing files placed in later layers
 
 ## 🛠️ Advanced Configuration
 
@@ -274,6 +405,12 @@ vim system-packages.txt             # Add/remove system packages
 
 ### Common Issues
 
+**VS Code Development Container:**
+- **Container won't start**: Check Docker is running and has sufficient resources
+- **Extensions not loading**: Container may still be building; wait for completion
+- **R packages missing**: Run `renv::restore()` in the R console
+- **Permission issues**: Ensure user mapping is correct (1000:1000)
+
 **Setup script fails:**
 - Run with `./env-setup.sh --help` to see all options
 - Use `./env-setup.sh --skip-docker` if Docker is already configured
@@ -291,15 +428,22 @@ vim system-packages.txt             # Add/remove system packages
 
 **Container name conflicts:**
 - `docker-run-local.sh` automatically removes existing containers
+- For Docker Compose: `docker-compose down` before restarting
 
 **Build performance:**
 - Setup script automatically enables Docker BuildKit
 - Check cache status: `docker system df`
 - Use debug mode to troubleshoot build issues: `--build-arg KEEP_DEPS=true`
 
-**Package issues:**
+**Package installation issues:**
 - Reset renv: `renv::restore()`
-- Clear cache: `rm -rf ~/.cache/R/renv`
+- Clear host cache: `rm -rf ~/.cache/R/renv`
+- Check package installation logs in VS Code terminal
+
+**VS Code Extension Issues:**
+- Extensions install during container build (may take 5-10 minutes first time)
+- If extensions fail to install, rebuild container: `docker-compose down && docker-compose up --build`
+- Check logs: `docker logs r-env-vscode`
 
 ### Debug Tools
 
@@ -313,26 +457,79 @@ vim system-packages.txt             # Add/remove system packages
 # Skip Docker checks (if already configured)
 ./env-setup.sh --skip-docker
 
-# Verify container environment
-./env-verify.sh
-
 # Check Docker cache usage
-docker buildx du
+docker system df
+
+# View container logs
+docker logs r-env-vscode
+
+# Rebuild everything from scratch
+docker-compose down
+docker system prune -a  # WARNING: Removes all Docker cache
+./docker-build.sh
 ```
+
+### Known Issues
+
+**Current Status** (as of June 7, 2025):
+
+1. **VS Code Extension Installation**: Some extensions may not install correctly during Docker build
+   - **Workaround**: Extensions can be installed manually after container starts
+   - **Status**: Investigating installation timing and permissions
+
+2. **Cache Layer Testing**: Docker BuildKit cache layers need validation
+   - **Status**: Testing in progress for optimal cache configuration
 
 ## 📚 Additional Resources
 
 - **System Dependencies**: Managed via `system-packages.txt` file
 - **renv Documentation**: https://rstudio.github.io/renv/
 - **Docker BuildKit**: https://docs.docker.com/develop/dev-best-practices/
+- **VS Code Dev Containers**: https://code.visualstudio.com/docs/devcontainers/containers
+- **Fish Shell**: https://fishshell.com/docs/current/
+- **Starship Prompt**: https://starship.rs/
+- **radian (Enhanced R Console)**: https://github.com/randy3k/radian
+
+### Project Files Reference
+
+| File | Purpose | Documentation |
+|------|---------|---------------|
+| `Dockerfile` | Multi-stage container build | Docker best practices applied |
+| `docker-compose.yml` | VS Code dev container setup | Uses published image from Docker Hub |
+| `devcontainer.json` | VS Code dev container config | Minimal configuration for Docker Compose |
+| `renv.lock` | R package versions (270+ packages) | Generated by renv::snapshot() |
+| `system-packages.txt` | System dependencies | One package per line, comments with # |
+| `config.fish` | Fish shell configuration | Includes renv activation and Starship |
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Make changes and test with `./docker-build.sh`
-3. Update documentation if needed
-4. Submit a pull request
+3. Test in VS Code dev container: `code . && "Reopen in Container"`
+4. Update documentation if needed
+5. Submit a pull request
+
+### Development Guidelines
+
+- **System packages**: Add to `system-packages.txt`
+- **R packages**: Use `renv::install()` and `renv::snapshot()`
+- **VS Code extensions**: Add to `install-extensions.sh`
+- **Shell configuration**: Modify `config.fish`
+- **Docker optimizations**: Consider build cache implications
 
 ---
 
-**Ready to develop?** Run `./docker-build.sh` followed by `./docker-run-local.sh` to get started with your reproducible R environment! 🎉
+**Ready to develop?** 
+
+**For VS Code users (recommended):**
+```bash
+code /home/wuzi/Documents/Scripts/my-r-env
+# Click "Reopen in Container" when prompted
+```
+
+**For standalone development:**
+```bash
+./docker-build.sh && ./docker-run-local.sh
+```
+
+🎉 **Happy coding with your reproducible R environment!**
