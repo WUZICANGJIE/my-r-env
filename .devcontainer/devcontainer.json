@@ -1,23 +1,24 @@
 {
-  "name": "My R Environment",
+  "name": "R",
   // Use the same image as in your Docker script
   "image": "docker.io/wuzicangjie/my-r-env:latest",
-  "workspaceFolder": "/workspace",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "mounts": [
-    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
-    // Mount renv cache for package management
-    "source=${localEnv:HOME}/.cache/R/renv,target=/renv/cache,type=bind",
-    // Mount the workspace directory to /workspace to avoid overwriting built-in /project
-    "source=${localWorkspaceFolder},target=/workspace,type=bind"
+    // Mount renv cache for package management (persistent across rebuilds)
+    // Use bind mount to user home cache directory for better persistence in WSL/Unix
+    "source=${localEnv:HOME}/.cache/R/renv,target=/renv/cache,type=bind"
   ],
   "containerEnv": {
     // Set renv cache path to match your Docker script
     "RENV_PATHS_CACHE": "/renv/cache"
   },
-  "postCreateCommand": "bash -c 'cd /workspace && cp -r /project/* . 2>/dev/null || true'",
   "features": {
-    "ghcr.io/devcontainers/features/docker-from-docker:1": {}
+    "ghcr.io/devcontainers/features/docker-from-docker:1": {
+      "version": "latest",
+      "enableNonRootDocker": "true"
+    }
   },
+  "runArgs": ["--name", "r-env-vscode"],
   // Add any other customizations you need below
   "customizations": {
     "vscode": {
