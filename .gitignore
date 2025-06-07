@@ -5,8 +5,8 @@
 
 # --- Project Specific ---
 
-# Backup directory (contains legacy files)
-.backup/
+# Archive directory (contains legacy files)
+.archive/
 
 # Container backup files
 *.tar
