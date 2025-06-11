@@ -15,7 +15,19 @@
   "shutdownAction": "stopCompose",
   
   // Configure container user
-  "remoteUser": "wuzi"
+  "remoteUser": "wuzi",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "REditorSupport.r",
+        "RDebugger.r-debugger",
+        "mechatroner.rainbow-csv",
+        "george-alisson.html-preview-vscode",
+        "GrapeCity.gc-excelviewer",
+        "James-Yu.latex-workshop"
+      ]
+    }
+  }
   // Add any other customizations you need below
   // "forwardPorts": [],
 }
