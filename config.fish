@@ -25,6 +25,14 @@ set -gx LC_TELEPHONE $LC_ALL
 set -gx LC_MEASUREMENT $LC_ALL
 set -gx LC_IDENTIFICATION $LC_ALL
 
+# Add user's local Python bin to PATH for pip --user installations
+if test -d $HOME/.local/bin
+    set -gx PATH $HOME/.local/bin $PATH
+end
+
+# Radian alias for enhanced R console
+alias r='radian'
+
 # Validate locale and show info
 if test "$LANG" != "C"
     echo "🌐 Locale: $LANG"

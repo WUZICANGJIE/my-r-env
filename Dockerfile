@@ -16,6 +16,8 @@ ENV LANGUAGE=en_US:en
 
 # User configuration
 ENV USER_NAME=wuzi
+ENV USER_UID=1000
+ENV USER_GID=1000
 
 # --- Copy dependency definitions ---
 COPY system-packages.txt /tmp/system-packages.txt
@@ -34,7 +36,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && \
     sed -i '/ja_JP.UTF-8/s/^# //g' /etc/locale.gen && \
     sed -i '/zh_CN.UTF-8/s/^# //g' /etc/locale.gen && \
-    sed -i '/zh_TW.UTF-8/s/^# //g' /etc/locale.gen && \
     locale-gen && \
     update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
@@ -56,26 +57,23 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     fish
 
 # --- Create non-root user ---
-RUN existing_user=$(getent passwd 1000 | cut -d: -f1) && \
+RUN existing_user=$(getent passwd ${USER_UID} | cut -d: -f1) && \
     if [ -n "$existing_user" ]; then \
         if [ "$existing_user" != "${USER_NAME}" ]; then \
             usermod -l ${USER_NAME} -d /home/${USER_NAME} -m $existing_user 2>/dev/null || true; \
             groupmod -n ${USER_NAME} $existing_user 2>/dev/null || true; \
         fi; \
     else \
-        groupadd --gid 1000 ${USER_NAME} 2>/dev/null || true; \
-        useradd --uid 1000 --gid 1000 --shell /usr/bin/fish --create-home ${USER_NAME}; \
+        groupadd --gid ${USER_GID} ${USER_NAME} 2>/dev/null || true; \
+        useradd --uid ${USER_UID} --gid ${USER_GID} --shell /usr/bin/fish --create-home ${USER_NAME}; \
     fi && \
     usermod --shell /usr/bin/fish ${USER_NAME} 2>/dev/null || true && \
     usermod -aG sudo ${USER_NAME} 2>/dev/null || true && \
-    echo "${USER_NAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+    echo "${USER_NAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USER_NAME} && \
+    chmod 440 /etc/sudoers.d/${USER_NAME} && \
     mkdir -p /home/${USER_NAME}/project && \
     chown -R ${USER_NAME}:${USER_NAME} /home/${USER_NAME} 2>/dev/null || true && \
-    chown -R 1000:1000 ${RENV_PATHS_CACHE} 2>/dev/null || true
-
-# --- Install Python packages ---
-RUN --mount=type=cache,target=/var/cache/buildkit/pip \
-    pip3 install --break-system-packages radian
+    chown -R ${USER_UID}:${USER_GID} ${RENV_PATHS_CACHE} 2>/dev/null || true
 
 # --- Install Starship prompt ---
 RUN curl -sS https://starship.rs/install.sh | sh -s -- --yes
@@ -90,21 +88,21 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update -qq && apt-get install -y --no-install-recommends \
     code
 
-# --- Setup R environment ---
-RUN R -e "install.packages('renv', repos = c(CRAN = 'https://cloud.r-project.org'))"
-
 # Switch to non-root user
 USER ${USER_NAME}
 WORKDIR /home/${USER_NAME}/project
 
-COPY --chown=${USER_NAME}:${USER_NAME} renv.lock renv.lock
-COPY --chown=${USER_NAME}:${USER_NAME} .Rprofile .Rprofile
-COPY --chown=${USER_NAME}:${USER_NAME} renv/activate.R renv/activate.R
-COPY --chown=${USER_NAME}:${USER_NAME} renv/settings.json renv/settings.json
-COPY --chown=${USER_NAME}:${USER_NAME} init_renv.R init_renv.R
+# --- Install Python packages as user ---
+RUN --mount=type=cache,target=/home/${USER_NAME}/.cache/pip \
+    pip3 install --user --break-system-packages radian
 
-RUN --mount=type=cache,target=${RENV_PATHS_CACHE} \
-    R -e "renv::restore()"
+# --- Setup R environment as user ---
+RUN mkdir -p /home/${USER_NAME}/R/library && \
+    echo 'R_LIBS_USER="/home/${USER_NAME}/R/library"' > /home/${USER_NAME}/.Renviron && \
+    R -e "install.packages('renv', repos = c(CRAN = 'https://cloud.r-project.org'), lib = '/home/${USER_NAME}/R/library')"
+
+# --- Configure R profile ---
+COPY --chown=${USER_NAME}:${USER_NAME} .Rprofile /home/${USER_NAME}/.Rprofile
 
 # --- Configure Starship prompt and Fish shell ---
 COPY --chown=${USER_NAME}:${USER_NAME} config.fish /tmp/config.fish
@@ -113,13 +111,6 @@ RUN mkdir -p /home/${USER_NAME}/.config && \
     mkdir -p /home/${USER_NAME}/.config/fish && \
     cp /tmp/config.fish /home/${USER_NAME}/.config/fish/config.fish && \
     rm /tmp/config.fish
-
-# --- Install VS Code extensions ---
-COPY --chown=${USER_NAME}:${USER_NAME} install-extensions.sh /tmp/install-extensions.sh
-RUN chmod +x /tmp/install-extensions.sh && \
-    mkdir -p /home/${USER_NAME}/.vscode-server/extensions && \
-    bash -c '/tmp/install-extensions.sh' && \
-    rm /tmp/install-extensions.sh
 
 # --- Start the shell ---
 CMD ["fish"]

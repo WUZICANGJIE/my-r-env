@@ -156,7 +156,8 @@ The `env-setup.sh` script provides comprehensive environment validation:
 
 ### Runtime Environment
 - **Fish shell** with custom configuration and Starship prompt
-- **radian** for enhanced R console with syntax highlighting and completion
+- **radian** as the default R interface with syntax highlighting, completion, and auto-renv management
+- **Automatic renv handling**: Auto-initialization and restoration based on project state
 - **VS Code Server** with 30+ pre-installed extensions
 - **LaTeX** for RMarkdown PDF generation
 - **Docker-in-Docker** capability for containerized workflows
@@ -165,7 +166,8 @@ The `env-setup.sh` script provides comprehensive environment validation:
 ### VS Code Integration
 - **Development Container**: Full VS Code development environment
 - **Extension Management**: Automatic installation of R, Python, and data science extensions
-- **Integrated Terminal**: Fish shell with enhanced R console (radian)
+- **Integrated Terminal**: Fish shell with enhanced R console (radian as default)
+- **Automatic renv Management**: Auto-initialization and restoration on container startup
 - **IntelliSense**: Advanced R language server and Python support
 - **Git Integration**: Built-in Git support with GitHub integration
 

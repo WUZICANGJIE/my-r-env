@@ -12,12 +12,12 @@ services:
     user: "1000:1000"
     
     # Defines the working directory inside the container
-    working_dir: /workspaces/workspace
+    working_dir: /home/wuzi/project
     
     # Mounts the current local directory and the renv cache
     volumes:
       # Mounts the project folder to the workspace directory
-      - .:/workspaces/workspace:cached
+      - .:/home/wuzi/project:cached
       
       # Mounts the renv cache for package persistence
       - ~/.cache/R/renv:/renv/cache
@@ -30,10 +30,7 @@ services:
     environment:
       # Sets the renv cache path, same as in your devcontainer.json
       - RENV_PATHS_CACHE=/renv/cache
-      
-    # Keeps the container running
-    # You can use "sleep infinity" for Linux/macOS or a different command if needed
-    command: tail -f /dev/null
+
 
 networks:
   default:

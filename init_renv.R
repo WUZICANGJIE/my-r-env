@@ -1,5 +1,5 @@
 # Sample R script to initialize an R project with renv
-# This script should be run locally to create the renv.lock file
+# This script creates the renv.lock file for VSCode.
 
 # Install renv if not already installed
 if (!requireNamespace("renv", quietly = TRUE)) {
@@ -12,7 +12,7 @@ renv::init()
 # Define packages
 packages <- c(
   "tidyverse",
-  "data.table"
+  "languageserver"
 )
 
 # Install all CRAN packages
@@ -21,7 +21,6 @@ renv::install(packages)
 
 # Install GitHub packages
 github_packages <- c(
-  "itamarcaspi/experimentdatar",
   "nx10/httpgd"
 )
 

@@ -3,7 +3,14 @@
   // Use docker-compose.yml for container configuration
   "dockerComposeFile": "../docker-compose.yml",
   "service": "r_env",
-  "workspaceFolder": "/workspaces/workspace",
+  "workspaceFolder": "/home/wuzi/project",
+  
+  // Automatically clean up any existing containers before starting
+  "initializeCommand": "docker rm -f r-env-vscode 2>/dev/null || true",
+  
+  // Clean up when shutting down
+  "shutdownAction": "stopCompose",
+  
   // Configure container user
   "remoteUser": "wuzi"
   // Add any other customizations you need below

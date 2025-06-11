@@ -15,6 +15,7 @@ gpg
 
 # === Personal Tools ===
 # Convenience tools for personal preference
+sudo
 nano
 htop
 
