@@ -103,19 +103,11 @@ RUN mkdir -p /home/${USER_NAME}/R/library && \
 
 # --- Configure R profile and renv ---
 COPY --chown=${USER_NAME}:${USER_NAME} .Rprofile /home/${USER_NAME}/.Rprofile
-COPY --chown=${USER_NAME}:${USER_NAME} renv.lock /home/${USER_NAME}/project/renv.lock
-COPY --chown=${USER_NAME}:${USER_NAME} renv/activate.R /home/${USER_NAME}/project/renv/activate.R
-COPY --chown=${USER_NAME}:${USER_NAME} renv/settings.json /home/${USER_NAME}/project/renv/settings.json
 
 # --- Store renv preset files for auto-initialization ---
 COPY --chown=${USER_NAME}:${USER_NAME} renv.lock /home/${USER_NAME}/.renv-preset/renv.lock
 COPY --chown=${USER_NAME}:${USER_NAME} renv/activate.R /home/${USER_NAME}/.renv-preset/renv/activate.R
 COPY --chown=${USER_NAME}:${USER_NAME} renv/settings.json /home/${USER_NAME}/.renv-preset/renv/settings.json
-
-# --- Restore R packages from renv.lock ---
-RUN --mount=type=cache,target=${RENV_PATHS_CACHE} \
-    cd /home/${USER_NAME}/project && \
-    R -e "renv::restore()"
 
 # --- Configure Starship prompt and Fish shell ---
 COPY --chown=${USER_NAME}:${USER_NAME} config.fish /tmp/config.fish
