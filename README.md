@@ -6,14 +6,14 @@ A modern, containerized R development environment featuring reproducible package
 
 ## ✨ Features
 
-- **R 4.5.0** with comprehensive package ecosystem (270+ packages)
+- **R 4.5.0** with comprehensive package ecosystem (~135 packages)
 - **renv** for reproducible package management with **pre-installed essential packages**
 - **Built-in renv configuration** - `renv.lock`, `activate.R`, and `settings.json` embedded in container
 - **Fish shell** with Starship prompt for modern terminal experience
 - **Python + radian** for enhanced R console with syntax highlighting
-- **LaTeX** support for RMarkdown PDF output
-- **VS Code integration** with pre-installed extensions
-- **Docker BuildKit** optimizations for 75-80% faster rebuilds
+- **LaTeX** support for RMarkdown PDF output (full texlive installation)
+- **VS Code integration** with 30+ pre-configured extensions
+- **Docker BuildKit** optimizations for faster rebuilds
 - **Multi-architecture support** (amd64/arm64)
 - **Docker Compose** support for seamless VS Code development
 - **Centralized dependency management** system
@@ -72,39 +72,37 @@ The `env-setup.sh` script automatically handles setup for:
 ```
 my-r-env/
 ├── 🐳 Container Configuration
-│   ├── Dockerfile              # Multi-stage optimized Docker build
+│   ├── Dockerfile              # Multi-stage optimized Docker build (Ubuntu 24.04)
 │   ├── docker-compose.yml      # VS Code development container setup
 │   ├── docker-build.sh         # Build script with Docker Hub integration
 │   ├── docker-run-local.sh     # Local development runner
 │   ├── docker-run-hub.sh       # Docker Hub runner
 │   ├── docker-push.sh          # Docker Hub publishing script
-│   └── env-setup.sh            # Cross-platform setup and validation
+│   └── env-setup.sh            # Cross-platform setup and validation (632 lines)
 │
 ├── 📦 Dependency Management
-│   ├── system-packages.txt     # System dependencies (apt packages)
-│   ├── renv.lock              # R package lockfile (270+ packages) - **EMBEDDED IN CONTAINER**
+│   ├── system-packages.txt     # System dependencies (69 packages)
+│   ├── renv.lock              # R package lockfile (~135 packages) - **EMBEDDED IN CONTAINER**
 │   └── renv/                  # renv configuration and cache - **EMBEDDED IN CONTAINER**
 │       ├── activate.R         # renv activation script - **EMBEDDED IN CONTAINER**
 │       ├── settings.json      # renv settings - **EMBEDDED IN CONTAINER**
-│       └── library/           # Installed R packages
+│       └── library/           # Installed R packages (Ubuntu & Fedora library support)
 │
 ├── 🔧 Development Environment
 │   ├── .devcontainer/         # VS Code dev container configuration
-│   │   └── devcontainer.json  # Dev container settings
+│   │   └── devcontainer.json  # Dev container settings (Docker Compose based)
 │   ├── .Rprofile              # R startup configuration
-│   ├── config.fish            # Fish shell configuration
-│   ├── install-extensions.sh  # VS Code extensions installer
+│   ├── config.fish            # Fish shell configuration with locale support
+│   ├── install-extensions.sh  # VS Code extensions installer (30+ extensions)
 │   └── init_renv.R            # R package initialization script
-│
-├── 📊 Logs & Monitoring
-│   └── logs/                  # Build and verification logs
-│       ├── verification.log   # Container verification results
-│       └── verification_summary.log
 │
 └── 📋 Project Management
     ├── .checklist/            # Project tracking and TODO items
-    ├── .github/               # GitHub Actions and templates
-    └── LICENSE                # MIT License
+    │   ├── BUGS_TODO.md       # Known issues and planned fixes
+    │   └── readme-update-checklist.md
+    ├── .github/               # GitHub configuration
+    │   └── copilot-instructions.md  # GitHub Copilot configuration
+    └── LICENSE                # MIT License (2025)
 ```
 
 ## 🔧 Scripts Overview
@@ -143,7 +141,7 @@ The `env-setup.sh` script provides comprehensive environment validation:
 | File | Purpose | Usage |
 |------|---------|-------|
 | `system-packages.txt` | System dependencies (apt packages) | Edit directly, then rebuild |
-| `renv.lock` | **R package lockfile (270+ packages)** | Managed by renv |
+| `renv.lock` | **R package lockfile (~135 packages)** | Managed by renv |
 | `install-extensions.sh` | VS Code extensions installer | Runs during Docker build |
 
 ## 🐳 Container Features
@@ -183,7 +181,7 @@ The `env-setup.sh` script provides comprehensive environment validation:
 
 **🚀 NEW**: The container now includes pre-configured renv files that are automatically available when you start the container on any machine:
 
-- **`renv.lock`**: Exact package versions for 270+ packages including `tidyverse`, `languageserver`, and `httpgd`
+- **`renv.lock`**: Exact package versions for ~135 packages including `tidyverse`, `languageserver`, and `httpgd`
 - **`renv/activate.R`**: Automatic renv initialization in any R session
 - **`renv/settings.json`**: Pre-configured renv settings for optimal behavior
 
@@ -193,32 +191,28 @@ The `env-setup.sh` script provides comprehensive environment validation:
 - ✅ **Zero configuration**: Works out-of-the-box for new projects
 - ✅ **Team consistency**: Identical development environment for all team members
 
-### Current R Packages (270+ installed)
-The environment includes a comprehensive, production-ready set of R packages managed through renv:
+### Current R Packages (~135 installed)
+The environment includes a curated, production-ready set of R packages managed through renv:
 
 **Core Development & IDE:**
 - tidyverse, devtools, rmarkdown, shiny, languageserver
 - data.table, ggplot2, dplyr, httpgd (for VS Code plotting)
 
 **Statistical Analysis:**
-- psych, broom, forecast, car, lmtest, zoo, moments
-- estimatr, bayestestR, insight, datawizard
+- broom, haven, lubridate, tibble, scales
+- DBI, dbplyr, readr, readxl, vroom
 
 **Data Import/Export:**
-- readxl, haven, DBI, dbplyr, googledrive, googlesheets4
-- countrycode, comtradr, rsdmx, quantmod, wbstats
+- googledrive, googlesheets4, httr, curl, jsonlite
+- xml2, rvest, openssl
 
 **Visualization & Tables:**
-- gt, kableExtra, coefplot, stargazer, cowplot
-- htmlwidgets, dygraphs, crosstalk
-
-**Advanced Methods:**
-- optionstrat, fUnitRoots, strucchange, fBasics
-- GPArotation, experimentdatar
+- ggplot2, scales, RColorBrewer, viridisLite
+- htmltools, knitr, rmarkdown
 
 **Development Tools:**
-- testthat, roxygen2, pkgdown, usethis, gitcreds
-- lintr, styler, profvis, bench
+- renv, devtools, roxygen2, usethis
+- lintr, styler, reprex, pkgbuild
 
 ### Adding Packages
 
@@ -495,14 +489,18 @@ docker system prune -a  # WARNING: Removes all Docker cache
 
 ### Known Issues
 
-**Current Status** (as of June 7, 2025):
+**Current Status** (as of June 11, 2025):
 
-1. **VS Code Extension Installation**: Some extensions may not install correctly during Docker build
+1. **VS Code Extension Installation**: Extensions may not install correctly during Docker build
+   - **Issue**: The `install-extensions.sh` script may fail during container build
    - **Workaround**: Extensions can be installed manually after container starts
-   - **Status**: Investigating installation timing and permissions
+   - **Status**: Known issue, investigating installation timing and permissions
+   - **Files affected**: `install-extensions.sh` (30+ extensions)
 
-2. **Cache Layer Testing**: Docker BuildKit cache layers need validation
+2. **Docker BuildKit Cache Testing**: Cache layer optimizations need validation
+   - **Issue**: Performance claims for cache layers need verification
    - **Status**: Testing in progress for optimal cache configuration
+   - **Details**: APT, pip, and renv cache mount effectiveness
 
 ## 📚 Additional Resources
 
@@ -521,7 +519,7 @@ docker system prune -a  # WARNING: Removes all Docker cache
 | `Dockerfile` | Multi-stage container build | Docker best practices applied |
 | `docker-compose.yml` | VS Code dev container setup | Uses published image from Docker Hub |
 | `devcontainer.json` | VS Code dev container config | Minimal configuration for Docker Compose |
-| `renv.lock` | R package versions (270+ packages) | Generated by renv::snapshot() |
+| `renv.lock` | R package versions (~135 packages) | Generated by renv::snapshot() |
 | `system-packages.txt` | System dependencies | One package per line, comments with # |
 | `config.fish` | Fish shell configuration | Includes renv activation and Starship |
 
