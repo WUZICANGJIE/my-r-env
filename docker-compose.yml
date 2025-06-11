@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   r_env:
     # Use the same image as in your devcontainer.json
@@ -13,6 +11,9 @@ services:
     
     # Defines the working directory inside the container
     working_dir: /home/wuzi/project
+    
+    # Keep container running for dev containers
+    command: sleep infinity
     
     # Mounts the current local directory and the renv cache
     volumes:

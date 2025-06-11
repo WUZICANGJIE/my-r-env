@@ -7,7 +7,8 @@ A modern, containerized R development environment featuring reproducible package
 ## ✨ Features
 
 - **R 4.5.0** with comprehensive package ecosystem (270+ packages)
-- **renv** for reproducible package management with persistent caching
+- **renv** for reproducible package management with **pre-installed essential packages**
+- **Built-in renv configuration** - `renv.lock`, `activate.R`, and `settings.json` embedded in container
 - **Fish shell** with Starship prompt for modern terminal experience
 - **Python + radian** for enhanced R console with syntax highlighting
 - **LaTeX** support for RMarkdown PDF output
@@ -81,10 +82,10 @@ my-r-env/
 │
 ├── 📦 Dependency Management
 │   ├── system-packages.txt     # System dependencies (apt packages)
-│   ├── renv.lock              # R package lockfile (270+ packages)
-│   └── renv/                  # renv configuration and cache
-│       ├── activate.R         # renv activation script
-│       ├── settings.json      # renv settings
+│   ├── renv.lock              # R package lockfile (270+ packages) - **EMBEDDED IN CONTAINER**
+│   └── renv/                  # renv configuration and cache - **EMBEDDED IN CONTAINER**
+│       ├── activate.R         # renv activation script - **EMBEDDED IN CONTAINER**
+│       ├── settings.json      # renv settings - **EMBEDDED IN CONTAINER**
 │       └── library/           # Installed R packages
 │
 ├── 🔧 Development Environment
@@ -178,6 +179,20 @@ The `env-setup.sh` script provides comprehensive environment validation:
 
 ## 📦 Package Management
 
+### Built-in renv Configuration (Cross-Platform Reproducibility)
+
+**🚀 NEW**: The container now includes pre-configured renv files that are automatically available when you start the container on any machine:
+
+- **`renv.lock`**: Exact package versions for 270+ packages including `tidyverse`, `languageserver`, and `httpgd`
+- **`renv/activate.R`**: Automatic renv initialization in any R session
+- **`renv/settings.json`**: Pre-configured renv settings for optimal behavior
+
+**Key Benefits:**
+- ✅ **Instant availability**: Essential packages ready immediately on any computer
+- ✅ **Perfect reproducibility**: Same package versions across all environments  
+- ✅ **Zero configuration**: Works out-of-the-box for new projects
+- ✅ **Team consistency**: Identical development environment for all team members
+
 ### Current R Packages (270+ installed)
 The environment includes a comprehensive, production-ready set of R packages managed through renv:
 
@@ -210,6 +225,8 @@ The environment includes a comprehensive, production-ready set of R packages man
 #### In VS Code Development Container
 ```r
 # Open R console in VS Code terminal or use Jupyter notebooks
+# Essential packages (tidyverse, languageserver, httpgd) are already available!
+
 renv::install("package_name")    # Install from CRAN
 renv::install("user/repo")       # Install from GitHub
 renv::snapshot()                 # Update lockfile
@@ -218,6 +235,8 @@ renv::snapshot()                 # Update lockfile
 #### In Standalone Container
 ```r
 # Inside the container
+# Essential packages (tidyverse, languageserver, httpgd) are already available!
+
 renv::install("package_name")    # Install from CRAN
 renv::install("user/repo")       # Install from GitHub
 renv::snapshot()                 # Update lockfile
@@ -228,6 +247,7 @@ exit
 ```
 
 ### Package Cache System
+- **Essential packages**: Pre-installed in container (`tidyverse`, `languageserver`, `httpgd`, etc.)
 - **Host cache**: `~/.cache/R/renv` → `/renv/cache` (persistent across rebuilds)
 - **Container cache**: Optimized with Docker BuildKit cache mounts
 - **renv library**: `renv/library/` (version-specific installations)

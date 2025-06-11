@@ -8,6 +8,12 @@
   // Automatically clean up any existing containers before starting
   "initializeCommand": "docker rm -f r-env-vscode 2>/dev/null || true",
   
+  // Copy renv files to project directory after container starts (if missing)
+  "postCreateCommand": [
+    "bash", "-c", 
+    "if [ ! -f renv.lock ]; then echo '🚀 Initializing renv configuration...' && cp /home/wuzi/.renv-preset/renv.lock . 2>/dev/null && cp -r /home/wuzi/.renv-preset/renv . 2>/dev/null && echo '📦 Restoring R packages...' && R -e 'renv::restore()' && echo '✅ renv configuration initialized! Essential packages ready.'; fi"
+  ],
+  
   // Clean up when shutting down
   "shutdownAction": "stopCompose",
   
